@@ -59,7 +59,7 @@ def set_answer(q, raw, problems):
 
 def parse(text):
     sections, problems = [], []
-    sec = q = None
+    sec = topic = q = None
     for line in text.splitlines():
         s = line.strip()
         if not s:
@@ -67,10 +67,10 @@ def parse(text):
         if m := SECTION.match(s):
             sec = {"num": m[1], "section": f"Section {m[1]}: {m[2]}", "topics": {}}
             sections.append(sec)
-            topic = None
-        elif line.startswith("\t•\t"):
-            if s.lstrip("•").strip() and q:
-                q["options"].append(line[3:].strip())
+        elif s.startswith("•"):  # an answer option (empty bullets are skipped)
+            option = s.lstrip("•").strip()
+            if option and q:
+                q["options"].append(option)
         elif s.startswith("Answer:") and q:
             set_answer(q, s[7:].strip(), problems)
             q = None
@@ -114,8 +114,8 @@ if __name__ == "__main__":
     for sec in sections:
         path = Path("data") / f"section-{sec['num']}.js"
         path.write_text(to_js(sec), encoding="utf-8")
-        n = sum(len(v) for v in sec["topics"].values())
-        a = sum(1 for v in sec["topics"].values() for q in v if "answer" in q)
-        print(f"wrote {path}: {len(sec['topics'])} topics, {n} questions, {a} with answers")
+        qs = [q for topic_qs in sec["topics"].values() for q in topic_qs]
+        answered = sum("answer" in q for q in qs)
+        print(f"wrote {path}: {len(sec['topics'])} topics, {len(qs)} questions, {answered} with answers")
     for p in problems:
         print("CHECK:", p)

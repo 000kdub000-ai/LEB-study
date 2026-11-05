@@ -1,25 +1,23 @@
-/* ============================================================
-   Colors. Light mode = "Library" look, dark mode = "Night Study".
-   The app picks one automatically from the device's setting.
-   ============================================================ */
+/* ---------- Colors and fonts ----------
+   Light mode is the "Library" look, dark mode the "Night Study" look.
+   The browser picks one from the device's light/dark setting. */
 :root {
   /* The palette */
   --space-cadet: #25344F;
-  --slate-gray: #617891;
   --tan: #D5B893;
   --coffee: #6F4D38;
   --caput-mortuum: #632024;
-  --night-red: #8C2430;   /* a redder red for dark mode */
+  --night-red: #8C2430;   /* redder red for dark mode */
   --butter: #EFE68E;
   --paper: #F5EEE2;
-  --green: #4E6B3E;       /* "correct" (not in the palette) */
+  --green: #4E6B3E;       /* "correct" */
 
-  /* Light mode: what each part of the app uses */
+  /* What each part of the app uses (light mode) */
   --bg: var(--paper);
   --surface: #FAF6EE;
   --border: var(--tan);
   --text: var(--space-cadet);
-  --muted: #56697F;
+  --muted: #56697F;       /* a darker Slate Gray, readable on paper */
   --title: var(--space-cadet);
   --accent: var(--coffee);
   --primary-bg: var(--space-cadet);
@@ -31,8 +29,13 @@
   --chosen-text: var(--paper);
   --good: var(--green);
   --bad: var(--caput-mortuum);
-  --bad-message: var(--caput-mortuum);
   --good-message: var(--green);
+  --bad-message: var(--caput-mortuum);
+  --scroll-shadow: rgba(37, 52, 79, 0.22);
+
+  --font-display: "DM Serif Display", Georgia, serif;  /* big headings */
+  --font-label: "Oswald", "Arial Narrow", sans-serif;  /* labels and buttons */
+  --font-body: "Source Serif 4", Georgia, serif;       /* everything else */
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -47,31 +50,24 @@
     --primary-text: var(--space-cadet);
     --secondary: var(--tan);
     --missed-bg: var(--night-red);
-    --missed-text: var(--tan);
     --chosen-bg: var(--tan);
     --chosen-text: var(--space-cadet);
     --bad: var(--night-red);
-    --bad-message: var(--tan);
     --good-message: #9CC48A;
+    --bad-message: var(--tan);
+    --scroll-shadow: rgba(0, 0, 0, 0.45);
   }
 }
 
-/* ---------- Fonts ---------- */
-:root {
-  --font-display: "DM Serif Display", Georgia, serif;   /* big headings */
-  --font-label: "Oswald", "Arial Narrow", sans-serif;   /* small caps labels, buttons */
-  --font-body: "Source Serif 4", Georgia, serif;        /* everything else */
-}
-
-/* ---------- Page basics ---------- */
+/* ---------- Page layout ----------
+   The page is exactly one screen tall and never scrolls as a whole.
+   Each screen is a column: top bar, a card that fills the space (its
+   content scrolls if it's long), then the buttons. */
 * { box-sizing: border-box; }
-/* The page is exactly one screen tall and never scrolls as a whole.
-   Each screen is a column: top bar, then a card that fills the space
-   (its content scrolls if it's long), then the buttons at the bottom. */
-html, body { height: 100%; }
 body {
   margin: 0;
-  height: 100dvh;            /* dvh = the visible screen height on phones */
+  height: 100vh;
+  height: 100dvh;            /* the visible screen height on phones */
   overflow: hidden;
   display: flex; flex-direction: column;
   background: var(--bg);
@@ -88,8 +84,8 @@ main > section { flex: 1; min-height: 0; display: flex; flex-direction: column; 
 #home-view { overflow-y: auto; } /* only matters on very small screens */
 [hidden] { display: none !important; }
 
-/* Small uppercase label style, used in several places */
-.eyebrow, .field > span, .field legend, .progress, .topic {
+/* Small uppercase labels */
+.eyebrow, .field > span, .field legend, .progress, .topic, .flip-hint {
   font-family: var(--font-label);
   font-weight: 500;
   font-size: 13px;
@@ -99,13 +95,13 @@ main > section { flex: 1; min-height: 0; display: flex; flex-direction: column; 
 
 /* ---------- Header (home screen only) ---------- */
 .brand { width: 100%; max-width: 560px; margin: 0 auto; padding: calc(40px + env(safe-area-inset-top)) 24px 8px; }
-.brand .eyebrow { color: var(--accent); margin: 0; letter-spacing: 0.12em; }
+.brand .eyebrow { color: var(--accent); margin: 0; }
 .brand h1 {
   font-family: var(--font-display); font-weight: 400;
   font-size: 40px; line-height: 1.05; color: var(--title); margin: 0;
 }
 
-/* Row at the top of flashcards and quiz: "← Home" and progress */
+/* Top bar of flashcards and quiz: "← Home" and progress */
 .viewbar {
   display: flex; justify-content: space-between; align-items: center;
   gap: 12px; padding: calc(20px + env(safe-area-inset-top)) 0 14px;
@@ -128,8 +124,9 @@ button.link {
   text-transform: none; letter-spacing: 0;
   background: none; border: none; color: var(--accent); padding: 4px 0; min-height: 0;
 }
-button.link.small { font-size: 14px; align-self: flex-start; }
-button:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+#clear-missed { font-size: 14px; align-self: flex-start; }
+button:focus-visible, select:focus-visible, .flashcard:focus-visible,
+.segmented label:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 /* ---------- Home screen ---------- */
 .field { display: block; border: 0; padding: 0; margin: 16px 0 20px; }
@@ -140,10 +137,10 @@ select {
   padding: 14px 16px;
 }
 
-/* Easy / Hard choice: the radio button is hidden, the whole box is clickable */
+/* Easy / Hard: the radio button is hidden and the whole box is clickable */
 .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .segmented label {
-  position: relative; display: block; cursor: pointer;
+  position: relative; cursor: pointer;
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
   padding: 12px 14px; font-weight: 600;
 }
@@ -151,13 +148,11 @@ select {
 .segmented small { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
 .segmented label:has(input:checked) { background: var(--chosen-bg); border-color: var(--chosen-bg); color: var(--chosen-text); }
 .segmented label:has(input:checked) small { color: var(--chosen-text); opacity: 0.85; }
-.segmented label:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 .actions { display: grid; gap: 10px; }
-.muted { color: var(--muted); font-size: 14px; }
+#home-note { color: var(--muted); font-size: 14px; }
 
-/* ---------- Cards (flashcards and quiz questions) ---------- */
-/* The card fills the space between the top bar and the buttons */
+/* ---------- Cards (flashcards and quiz) ---------- */
 .card {
   flex: 1; min-height: 0;
   display: flex; flex-direction: column;
@@ -165,8 +160,8 @@ select {
   overflow: hidden;
 }
 
-/* The scrolling part inside a card. The four backgrounds draw a soft
-   shadow at the top/bottom edge only when there's more to scroll to. */
+/* The scrolling part of a card. The four backgrounds draw a soft shadow
+   at the top/bottom edge only when there's more to scroll to. */
 .scroll {
   flex: 1; min-height: 0;
   overflow-y: auto; overscroll-behavior: contain;
@@ -180,29 +175,26 @@ select {
   background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
   background-attachment: local, local, scroll, scroll;
 }
-:root { --scroll-shadow: rgba(37, 52, 79, 0.22); }
-@media (prefers-color-scheme: dark) { :root { --scroll-shadow: rgba(0, 0, 0, 0.45); } }
 
 .topic { color: var(--accent); margin: 0 0 14px; line-height: 1.4; }
-.question { font-size: 19px; line-height: 1.6; margin: 0 0 16px; max-width: 34em; }
+.question { font-size: 19px; line-height: 1.6; margin: 0 0 16px; }
 .hint { font-size: 15px; color: var(--muted); margin: 0 0 14px; }
 
-/* Flashcard: big serif question, same size for short and long questions */
+/* Flashcard: big serif question */
 .flashcard { cursor: pointer; }
 .flashcard .scroll { padding-top: 28px; }
 .flashcard .question, .flashcard .answer {
   font-family: var(--font-display); font-size: 25px; line-height: 1.3; margin: 0 0 18px;
 }
-.flashcard ol { padding-left: 1.4em; margin: 0; font-size: 17px; line-height: 1.5; }
+.flashcard ol { padding-left: 1.4em; margin: 0; }
 .flashcard li { margin-bottom: 10px; padding-left: 4px; }
 .flip-hint {
-  flex: none; margin: 0; padding: 12px 16px 14px; text-align: center; color: var(--muted);
+  flex: none; margin: 0; padding: 12px 16px 14px;
+  font-size: 12px; text-align: center; color: var(--muted);
   border-top: 1px solid var(--border);
-  font-family: var(--font-label); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
 }
-.flashcard:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
-/* Answer choices in the quiz */
+/* Quiz answer choices */
 .options { display: grid; gap: 10px; }
 .options label {
   display: flex; gap: 12px; align-items: flex-start;
@@ -218,6 +210,6 @@ select {
 .feedback.good { color: var(--good-message); }
 .feedback.bad { color: var(--bad-message); }
 
-/* Row of buttons under a card */
+/* Buttons under a card */
 .row { flex: none; display: flex; gap: 8px; margin-top: 14px; }
 .row button { flex: 1; }
