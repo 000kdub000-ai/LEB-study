@@ -2,13 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>LEB Study</title>
+  <!-- Fonts from Google Fonts (if they can't load, similar built-in fonts are used) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Oswald:wght@500&family=Source+Serif+4:wght@400;600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
-    <button id="home-btn" class="link" hidden>&larr; Home</button>
+  <!-- Title, shown on the home screen -->
+  <header class="brand" id="brand">
+    <p class="eyebrow">Contract Law</p>
     <h1>LEB Study</h1>
   </header>
 
@@ -23,15 +28,15 @@
       <fieldset class="field">
         <legend>Quiz mode</legend>
         <div class="segmented">
-          <label><input type="radio" name="mode" value="easy" checked> Easy <small>keep going</small></label>
-          <label><input type="radio" name="mode" value="hard"> Hard <small>restart on a miss</small></label>
+          <label><input type="radio" name="mode" value="easy" checked> Easy <small>Keep going</small></label>
+          <label><input type="radio" name="mode" value="hard"> Hard <small>Restart on a miss</small></label>
         </div>
       </fieldset>
 
       <div class="actions">
-        <button id="start-flash" class="primary">Flashcards</button>
-        <button id="start-quiz" class="primary">Start quiz</button>
-        <button id="start-missed">Review missed (<span id="missed-count">0</span>)</button>
+        <button id="start-flash">Flashcards</button>
+        <button id="start-quiz">Start quiz</button>
+        <button id="start-missed" class="missed">Review missed (<span id="missed-count">0</span>)</button>
       </div>
       <p id="home-note" class="muted"></p>
       <button id="clear-missed" class="link small">Clear missed list</button>
@@ -39,29 +44,41 @@
 
     <!-- FLASHCARDS: tap the card to flip it -->
     <section id="flash-view" hidden>
-      <p class="progress" id="flash-progress"></p>
-      <button id="card" class="card"></button>
+      <div class="viewbar">
+        <button class="link home-btn">&larr; Home</button>
+        <p class="progress" id="flash-progress"></p>
+      </div>
+      <!-- A div, not a button, because content inside a button can't scroll -->
+      <div id="card" class="card flashcard" role="button" tabindex="0">
+        <div id="card-scroll" class="scroll"></div>
+        <p id="flip-hint" class="flip-hint"></p>
+      </div>
       <div class="row">
-        <button id="flash-prev">Previous</button>
-        <button id="flash-shuffle">Shuffle</button>
-        <button id="flash-next" class="primary">Next</button>
+        <button id="flash-prev" class="secondary">Prev</button>
+        <button id="flash-shuffle" class="secondary">Shuffle</button>
+        <button id="flash-next">Next</button>
       </div>
     </section>
 
     <!-- QUIZ: answer, get feedback, move on -->
     <section id="quiz-view" hidden>
-      <p class="progress" id="quiz-progress"></p>
-      <div class="card static">
-        <p class="topic" id="quiz-topic"></p>
-        <p class="question" id="quiz-question"></p>
-        <p class="hint" id="quiz-hint"></p>
-        <div id="quiz-options" class="options"></div>
+      <div class="viewbar">
+        <button class="link home-btn">&larr; Home</button>
+        <p class="progress" id="quiz-progress"></p>
+      </div>
+      <div class="card">
+        <div id="quiz-scroll" class="scroll">
+          <p class="topic" id="quiz-topic"></p>
+          <p class="question" id="quiz-question"></p>
+          <p class="hint" id="quiz-hint"></p>
+          <div id="quiz-options" class="options"></div>
+        </div>
       </div>
       <p id="quiz-feedback" class="feedback" aria-live="polite"></p>
       <div class="row">
-        <button id="quiz-submit" class="primary">Check answer</button>
-        <button id="quiz-next" class="primary" hidden>Next</button>
-        <button id="quiz-restart" class="primary" hidden>Restart</button>
+        <button id="quiz-submit">Check answer</button>
+        <button id="quiz-next" hidden>Next</button>
+        <button id="quiz-restart" hidden>Restart</button>
       </div>
     </section>
   </main>

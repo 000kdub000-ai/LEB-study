@@ -87,7 +87,7 @@ function el(tag, text, className) {
 // Show one screen (home, flashcards or quiz) and hide the others.
 function showView(name) {
   ["home", "flash", "quiz"].forEach((v) => ($(v + "-view").hidden = v !== name));
-  $("home-btn").hidden = name === "home";
+  $("brand").hidden = name !== "home"; // big title only on the home screen
   window.scrollTo(0, 0);
 }
 
@@ -151,9 +151,12 @@ function startFlashcards() {
 
 function renderCard() {
   const q = flash.cards[flash.index];
-  const card = $("card");
+  // The card's content goes in its scroll area, so long questions scroll
+  // inside the card instead of making the page longer.
+  const card = $("card-scroll");
   card.replaceChildren();
-  $("flash-progress").textContent = `Card ${flash.index + 1} of ${flash.cards.length} · tap the card to flip`;
+  card.scrollTop = 0;
+  $("flash-progress").textContent = `Card ${flash.index + 1} of ${flash.cards.length}`;
 
   if (!flash.flipped) {
     // Front: the question (and its choices, if any)
@@ -168,7 +171,7 @@ function renderCard() {
     }
   } else {
     // Back: the answer
-    card.append(el("p", "Answer", "label"));
+    card.append(el("p", "Answer", "topic"));
     if (hasAnswer(q)) {
       q.correct.forEach((c) => card.append(el("p", c, "answer")));
       if (q.note) card.append(el("p", q.note, "hint"));
@@ -176,6 +179,7 @@ function renderCard() {
       card.append(el("p", "Answer not added yet.", "hint"));
     }
   }
+  $("flip-hint").textContent = flash.flipped ? "Tap to see the question" : "Tap the card to flip";
   $("flash-prev").disabled = flash.index === 0;
   $("flash-next").disabled = flash.index === flash.cards.length - 1;
 }
@@ -208,13 +212,16 @@ function restartQuiz() {
 
 function renderQuestion() {
   const q = quiz.order[quiz.index];
-  const label = quiz.mode === "hard" ? "streak" : "correct";
+  const score = quiz.mode === "hard" ? `streak ${quiz.score}` : `${quiz.score} ✓`;
   $("quiz-progress").textContent =
-    `${quiz.review ? "Missed review · " : ""}${quiz.mode === "hard" ? "Hard" : "Easy"} · ` +
-    `Question ${quiz.index + 1} of ${quiz.order.length} · ${quiz.score} ${label}`;
+    `${quiz.review ? "Missed · " : ""}${quiz.mode === "hard" ? "Hard" : "Easy"} · ` +
+    `${quiz.index + 1} of ${quiz.order.length} · ${score}`;
   $("quiz-topic").textContent = q.topic;
   $("quiz-question").textContent = q.text;
-  $("quiz-hint").textContent = q.kind === "multi" ? `Choose ${q.correct.length}.` : "";
+  // "Choose 3." hint, unless the question already says how many to pick
+  const saysHowMany = /choose (two|three|four|\d)/i.test(q.text);
+  $("quiz-hint").textContent = q.kind === "multi" && !saysHowMany ? `Choose ${q.correct.length}.` : "";
+  $("quiz-hint").hidden = !$("quiz-hint").textContent;
 
   // One radio button per choice (checkboxes for "select all that apply")
   const box = $("quiz-options");
@@ -232,6 +239,7 @@ function renderQuestion() {
     box.append(row);
   });
 
+  $("quiz-scroll").scrollTop = 0; // start each question at the top
   $("quiz-feedback").textContent = "";
   $("quiz-feedback").className = "feedback";
   $("quiz-submit").hidden = false;
@@ -279,8 +287,9 @@ function checkAnswer() {
   } else {
     $("quiz-next").hidden = false;
   }
-  // On long questions, bring the feedback and Next button on screen
-  $("quiz-next").parentElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  // On long questions, scroll the card so the correct answer is visible
+  const right = $("quiz-options").querySelector("label.correct");
+  if (right) right.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 // End of the quiz: show the score and offer to go again.
@@ -298,7 +307,8 @@ function showSummary() {
    ============================================================ */
 
 $("topic-select").addEventListener("change", updateHome);
-$("home-btn").addEventListener("click", () => { updateHome(); showView("home"); });
+document.querySelectorAll(".home-btn").forEach((btn) =>
+  btn.addEventListener("click", () => { updateHome(); showView("home"); }));
 
 $("start-flash").addEventListener("click", startFlashcards);
 $("start-quiz").addEventListener("click", () => startQuiz(false));
@@ -311,7 +321,12 @@ $("clear-missed").addEventListener("click", () => {
   }
 });
 
-$("card").addEventListener("click", () => { flash.flipped = !flash.flipped; renderCard(); });
+// Flip the card on tap/click, or with Enter or Space on a keyboard
+function flipCard() { flash.flipped = !flash.flipped; renderCard(); }
+$("card").addEventListener("click", flipCard);
+$("card").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flipCard(); }
+});
 $("flash-prev").addEventListener("click", () => { flash.index--; flash.flipped = false; renderCard(); });
 $("flash-next").addEventListener("click", () => { flash.index++; flash.flipped = false; renderCard(); });
 $("flash-shuffle").addEventListener("click", () => {
