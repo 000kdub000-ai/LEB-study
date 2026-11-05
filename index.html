@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LEB Study</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <button id="home-btn" class="link" hidden>&larr; Home</button>
+    <h1>LEB Study</h1>
+  </header>
+
+  <main>
+    <!-- HOME: choose what to study and how -->
+    <section id="home-view">
+      <label class="field">
+        <span>Study</span>
+        <select id="topic-select"></select>
+      </label>
+
+      <fieldset class="field">
+        <legend>Quiz mode</legend>
+        <div class="segmented">
+          <label><input type="radio" name="mode" value="easy" checked> Easy <small>keep going</small></label>
+          <label><input type="radio" name="mode" value="hard"> Hard <small>restart on a miss</small></label>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <button id="start-flash" class="primary">Flashcards</button>
+        <button id="start-quiz" class="primary">Start quiz</button>
+        <button id="start-missed">Review missed (<span id="missed-count">0</span>)</button>
+      </div>
+      <p id="home-note" class="muted"></p>
+      <button id="clear-missed" class="link small">Clear missed list</button>
+    </section>
+
+    <!-- FLASHCARDS: tap the card to flip it -->
+    <section id="flash-view" hidden>
+      <p class="progress" id="flash-progress"></p>
+      <button id="card" class="card"></button>
+      <div class="row">
+        <button id="flash-prev">Previous</button>
+        <button id="flash-shuffle">Shuffle</button>
+        <button id="flash-next" class="primary">Next</button>
+      </div>
+    </section>
+
+    <!-- QUIZ: answer, get feedback, move on -->
+    <section id="quiz-view" hidden>
+      <p class="progress" id="quiz-progress"></p>
+      <div class="card static">
+        <p class="topic" id="quiz-topic"></p>
+        <p class="question" id="quiz-question"></p>
+        <p class="hint" id="quiz-hint"></p>
+        <div id="quiz-options" class="options"></div>
+      </div>
+      <p id="quiz-feedback" class="feedback" aria-live="polite"></p>
+      <div class="row">
+        <button id="quiz-submit" class="primary">Check answer</button>
+        <button id="quiz-next" class="primary" hidden>Next</button>
+        <button id="quiz-restart" class="primary" hidden>Restart</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Study material. Each data file adds one section to this list.
+       To add material: put a new file in data/ and add a line for it here. -->
+  <script>const STUDY = [];</script>
+  <script src="data/section-1.js"></script>
+  <script src="data/section-2.js"></script>
+
+  <!-- The app itself (must come after the data files) -->
+  <script src="app.js"></script>
+</body>
+</html>
