@@ -91,29 +91,54 @@ function showView(name) {
 
 // ---------- 4. Home screen ----------
 
-// Fill the "Study" dropdown: All, then each section and its topics.
-// Option values look like "all", "s|<section>" or "t|<section>|<topic>".
-function buildTopicSelect() {
-  const select = $("topic-select");
-  select.append(new Option(`All questions (${QUESTIONS.length})`, "all"));
-  STUDY.forEach((sec) => {
-    const group = document.createElement("optgroup");
-    group.label = sec.section;
-    const count = QUESTIONS.filter((q) => q.section === sec.section).length;
-    group.append(new Option(`All of ${sec.section.split(":")[0]} (${count})`, "s|" + sec.section));
-    for (const [topic, items] of Object.entries(sec.topics)) {
-      group.append(new Option(`${topic} (${items.length})`, `t|${sec.section}|${topic}`));
-    }
-    select.append(group);
+// Make one button for "All" plus one per section (e.g. "Section 1")
+function buildSectionButtons() {
+  const choices = [{ value: "all", name: "All", count: QUESTIONS.length }];
+  STUDY.forEach((sec) => choices.push({
+    value: sec.section,
+    name: sec.section.split(":")[0],
+    count: QUESTIONS.filter((q) => q.section === sec.section).length,
+  }));
+  choices.forEach((choice, i) => {
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "section";
+    input.value = choice.value;
+    input.checked = i === 0;
+    input.addEventListener("change", sectionChanged);
+    const label = el("label");
+    label.append(input, choice.name + " ", el("small", `${choice.count} questions`));
+    $("section-buttons").append(label);
   });
 }
 
-// The questions matching the dropdown choice
+const selectedSection = () => document.querySelector('input[name="section"]:checked').value;
+
+// A section was picked: fill the topic dropdown with that section's topics
+// (hidden when "All" is picked)
+function sectionChanged() {
+  const section = selectedSection();
+  const select = $("topic-select");
+  select.replaceChildren();
+  $("topic-field").hidden = section === "all";
+  if (section !== "all") {
+    const sec = STUDY.find((s) => s.section === section);
+    $("topic-label").textContent = section;
+    const count = QUESTIONS.filter((q) => q.section === section).length;
+    select.append(new Option(`All topics (${count})`, "all"));
+    for (const [topic, items] of Object.entries(sec.topics)) {
+      select.append(new Option(`${topic} (${items.length})`, topic));
+    }
+  }
+  updateHome();
+}
+
+// The questions matching the section and topic choice
 function selectedQuestions() {
-  const [type, section, topic] = $("topic-select").value.split("|");
-  if (type === "s") return QUESTIONS.filter((q) => q.section === section);
-  if (type === "t") return QUESTIONS.filter((q) => q.section === section && q.topic === topic);
-  return QUESTIONS;
+  const section = selectedSection();
+  if (section === "all") return QUESTIONS;
+  const topic = $("topic-select").value;
+  return QUESTIONS.filter((q) => q.section === section && (topic === "all" || q.topic === topic));
 }
 
 function updateHome() {
@@ -352,5 +377,5 @@ $("quiz-next").addEventListener("click", () => {
 });
 $("quiz-restart").addEventListener("click", restartQuiz);
 
-buildTopicSelect();
+buildSectionButtons();
 updateHome();

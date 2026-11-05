@@ -20,8 +20,15 @@
   <main>
     <!-- HOME: choose what to study and how -->
     <section id="home-view">
-      <label class="field">
-        <span>Study</span>
+      <!-- Pick a section (buttons are made from the data files) -->
+      <fieldset class="field">
+        <legend>Study</legend>
+        <div id="section-buttons" class="segmented"></div>
+      </fieldset>
+
+      <!-- After picking a section: narrow it down to one topic -->
+      <label class="field" id="topic-field" hidden>
+        <span id="topic-label">Topic</span>
         <select id="topic-select"></select>
       </label>
 

@@ -103,7 +103,7 @@ don't see the change, do a hard refresh (`Cmd+Shift+R` on a Mac).
 ## Adding or changing study material
 
 All questions live in the `data/` folder, one file per section. The app builds
-the "Study" dropdown (sections and topics) from these files automatically.
+the "Study" section buttons and topic dropdown from these files automatically.
 
 ### Add an answer to an existing question (for example, Section 2)
 
