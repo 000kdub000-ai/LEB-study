@@ -119,6 +119,7 @@ function selectedQuestions() {
 function updateHome() {
   $("missed-count").textContent = missed.size;
   $("start-missed").disabled = missed.size === 0;
+  if (missed.size === 0) showMissedChoice(false);
   $("clear-missed").hidden = missed.size === 0;
   const list = selectedQuestions();
   const noAnswer = list.filter((q) => !hasAnswer(q)).length;
@@ -128,17 +129,26 @@ function updateHome() {
     : "";
 }
 
+// Show or hide the Flashcards / Quiz choice under "Review missed"
+function showMissedChoice(show) {
+  $("missed-choice").hidden = !show;
+  $("start-missed").setAttribute("aria-expanded", show);
+}
+
 function goHome() {
+  showMissedChoice(false);
   updateHome();
   showView("home");
 }
 
 // ---------- 5. Flashcards ----------
 
-const flash = { cards: [], index: 0, flipped: false };
+// review: flipping through the missed list instead of the dropdown choice
+const flash = { cards: [], index: 0, flipped: false, review: false };
 
-function startFlashcards() {
-  flash.cards = selectedQuestions();
+function startFlashcards(review) {
+  flash.review = review;
+  flash.cards = review ? missedQuestions() : selectedQuestions();
   showView("flash");
   showCard(0);
 }
@@ -177,7 +187,8 @@ function renderCard() {
     }
   }
 
-  $("flash-progress").textContent = `Card ${flash.index + 1} of ${flash.cards.length}`;
+  $("flash-progress").textContent =
+    `${flash.review ? "Missed · " : ""}Card ${flash.index + 1} of ${flash.cards.length}`;
   $("flip-hint").textContent = flash.flipped ? "Tap to see the question" : "Tap the card to flip";
   $("flash-prev").disabled = flash.index === 0;
   $("flash-next").disabled = flash.index === flash.cards.length - 1;
@@ -306,9 +317,11 @@ function showRestart(label) {
 $("topic-select").addEventListener("change", updateHome);
 document.querySelectorAll(".home-btn").forEach((b) => b.addEventListener("click", goHome));
 
-$("start-flash").addEventListener("click", startFlashcards);
+$("start-flash").addEventListener("click", () => startFlashcards(false));
 $("start-quiz").addEventListener("click", () => startQuiz(false));
-$("start-missed").addEventListener("click", () => startQuiz(true));
+$("start-missed").addEventListener("click", () => showMissedChoice($("missed-choice").hidden));
+$("missed-flash").addEventListener("click", () => startFlashcards(true));
+$("missed-quiz").addEventListener("click", () => startQuiz(true));
 $("clear-missed").addEventListener("click", () => {
   if (confirm("Clear your whole missed list?")) {
     missed.clear();

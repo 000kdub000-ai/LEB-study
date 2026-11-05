@@ -150,6 +150,7 @@ select {
 .segmented label:has(input:checked) small { color: var(--chosen-text); opacity: 0.85; }
 
 .actions { display: grid; gap: 10px; }
+.choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 #home-note { color: var(--muted); font-size: 14px; }
 
 /* ---------- Cards (flashcards and quiz) ---------- */

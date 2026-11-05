@@ -36,7 +36,12 @@
       <div class="actions">
         <button id="start-flash">Flashcards</button>
         <button id="start-quiz">Start quiz</button>
-        <button id="start-missed" class="missed">Review missed (<span id="missed-count">0</span>)</button>
+        <button id="start-missed" class="missed" aria-expanded="false" aria-controls="missed-choice">Review missed (<span id="missed-count">0</span>)</button>
+        <!-- Shown after tapping "Review missed": pick how to review -->
+        <div id="missed-choice" class="choice" hidden>
+          <button id="missed-flash" class="secondary">Flashcards</button>
+          <button id="missed-quiz" class="secondary">Quiz</button>
+        </div>
       </div>
       <p id="home-note"></p>
       <button id="clear-missed" class="link">Clear missed list</button>
