@@ -226,33 +226,63 @@ function flipCard() {
 
 // ---------- 6. Quiz (also used for "Review missed") ----------
 
-// mode: "easy" keeps going after a wrong answer, "hard" ends the run.
-// review: practicing the missed list, where a right answer removes
-// the question from the list.
-const quiz = { pool: [], order: [], index: 0, score: 0, mode: "easy", review: false };
+// mode: "easy" keeps going after a wrong answer, "hard" sends you back
+// to question 1. review: practicing the missed list, where a right answer
+// removes the question from the list.
+// score: right answers this run. streak: right answers in a row.
+// shuffleOnRestart: false when the Restart button should keep the same order.
+const quiz = {
+  pool: [], order: [], index: 0, score: 0, streak: 0,
+  mode: "easy", review: false, shuffleOnRestart: true,
+};
+
+// Losing a streak longer than this flashes "Streak lost" across the screen
+const BIG_STREAK = 5;
 
 function startQuiz(review) {
   quiz.review = review;
   quiz.mode = document.querySelector('input[name="mode"]:checked').value;
   if (!review) quiz.pool = selectedQuestions().filter(hasAnswer);
   showView("quiz");
-  restartQuiz();
+  restartQuiz(true);
 }
 
-function restartQuiz() {
+// Start from question 1: in a new shuffled order, or the same order again
+function restartQuiz(reshuffle) {
   if (quiz.review) quiz.pool = missedQuestions(); // the list may have changed
-  quiz.order = shuffle(quiz.pool);
+  quiz.order = reshuffle ? shuffle(quiz.pool) : quiz.order.filter((q) => quiz.pool.includes(q));
   quiz.index = 0;
   quiz.score = 0;
+  quiz.streak = 0;
   renderQuestion();
+}
+
+// Update the streak number; "pop" plays a little grow animation
+function showStreak(pop) {
+  const count = $("streak-count");
+  count.textContent = quiz.streak;
+  count.classList.remove("pop");
+  if (pop) {
+    void count.offsetWidth; // lets the animation play again
+    count.classList.add("pop");
+  }
+}
+
+// Flash "Streak lost" across the whole screen for 1 second
+let streakLostTimer;
+function flashStreakLost() {
+  $("streak-lost").hidden = false;
+  clearTimeout(streakLostTimer);
+  streakLostTimer = setTimeout(() => ($("streak-lost").hidden = true), 1000);
 }
 
 function renderQuestion() {
   const q = quiz.order[quiz.index];
-  const score = quiz.mode === "hard" ? `streak ${quiz.score}` : `${quiz.score} ✓`;
   $("quiz-progress").textContent =
     `${quiz.review ? "Missed · " : ""}${quiz.mode === "hard" ? "Hard" : "Easy"} · ` +
-    `${quiz.index + 1} of ${quiz.order.length} · ${score}`;
+    `${quiz.index + 1} of ${quiz.order.length}` +
+    (quiz.mode === "easy" ? ` · ${quiz.score} ✓` : "");
+  showStreak(false);
   $("quiz-topic").textContent = q.topic;
   $("quiz-question").textContent = q.text;
 
@@ -304,25 +334,29 @@ function checkAnswer() {
   const feedback = $("quiz-feedback");
   if (isRight) {
     quiz.score++;
+    quiz.streak++;
     if (quiz.review) missed.delete(q.text);
     feedback.textContent = quiz.review ? "Correct! Removed from your missed list." : "Correct!";
     feedback.className = "feedback good";
   } else {
+    if (quiz.streak > BIG_STREAK) flashStreakLost();
+    quiz.streak = 0;
     missed.add(q.text);
     feedback.textContent = "Not quite. The correct answer is highlighted in green." +
       (q.note ? " " + q.note : "");
     feedback.className = "feedback bad";
   }
+  showStreak(isRight);
   saveMissed();
   $("quiz-submit").hidden = true;
 
   if (!isRight && quiz.mode === "hard") {
-    feedback.textContent += ` Streak over at ${quiz.score}.`;
-    showRestart("Restart");
+    // Hard mode: same questions, same order, from the start
+    showRestart("Back to question 1", false);
   } else if (quiz.index === quiz.order.length - 1) {
     feedback.textContent += ` Done! You got ${quiz.score} of ${quiz.order.length} right.`;
     // In review, there's nothing to go again with once the list is empty
-    if (!quiz.review || missed.size > 0) showRestart("Go again");
+    if (!quiz.review || missed.size > 0) showRestart("Go again", true);
   } else {
     $("quiz-next").hidden = false;
   }
@@ -332,7 +366,8 @@ function checkAnswer() {
     .scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
-function showRestart(label) {
+function showRestart(label, reshuffle) {
+  quiz.shuffleOnRestart = reshuffle;
   $("quiz-restart").textContent = label;
   $("quiz-restart").hidden = false;
 }
@@ -375,7 +410,7 @@ $("quiz-next").addEventListener("click", () => {
   quiz.index++;
   renderQuestion();
 });
-$("quiz-restart").addEventListener("click", restartQuiz);
+$("quiz-restart").addEventListener("click", () => restartQuiz(quiz.shuffleOnRestart));
 
 buildSectionButtons();
 updateHome();

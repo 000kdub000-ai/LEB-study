@@ -78,6 +78,8 @@
         <button class="link home-btn">&larr; Home</button>
         <p class="progress" id="quiz-progress"></p>
       </div>
+      <!-- Right answers in a row -->
+      <p class="streak"><span>Streak</span> <strong id="streak-count">0</strong></p>
       <div class="card">
         <div id="quiz-scroll" class="scroll">
           <p class="topic" id="quiz-topic"></p>
@@ -94,6 +96,9 @@
       </div>
     </section>
   </main>
+
+  <!-- Flashes over the whole screen when you lose a long streak -->
+  <div id="streak-lost" class="streak-lost" role="alert" hidden>Streak lost</div>
 
   <!-- Study material. Each data file adds one section to this list.
        To add material: put a new file in data/ and add a line for it here. -->

@@ -85,7 +85,7 @@ main > section { flex: 1; min-height: 0; display: flex; flex-direction: column; 
 [hidden] { display: none !important; }
 
 /* Small uppercase labels */
-.eyebrow, .field > span, .field legend, .progress, .topic, .flip-hint {
+.eyebrow, .field > span, .field legend, .progress, .topic, .flip-hint, .streak span {
   font-family: var(--font-label);
   font-weight: 500;
   font-size: 13px;
@@ -196,6 +196,38 @@ select {
   flex: none; margin: 0; padding: 12px 16px 14px;
   font-size: 12px; text-align: center; color: var(--muted);
   border-top: 1px solid var(--border);
+}
+
+/* Streak counter above the quiz card */
+.streak {
+  flex: none; align-self: flex-start;
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 0 12px; padding: 4px 16px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+}
+.streak span { color: var(--muted); }
+.streak strong {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 30px; line-height: 1.2; color: var(--title);
+}
+.streak strong.pop { animation: pop 0.3s ease; }
+@keyframes pop { 50% { transform: scale(1.35); } }
+
+/* "Streak lost": covers the whole screen, fades in and out over 1 second.
+   pointer-events: none lets taps go through to the page underneath. */
+.streak-lost {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; text-align: center;
+  background: var(--bad); color: var(--paper);
+  font-family: var(--font-display); font-size: 56px; line-height: 1.1;
+  pointer-events: none;
+  animation: streak-lost 1s ease forwards;
+}
+@keyframes streak-lost {
+  0% { opacity: 0; }
+  15%, 75% { opacity: 0.95; }
+  100% { opacity: 0; }
 }
 
 /* Quiz answer choices */
