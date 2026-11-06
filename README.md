@@ -79,7 +79,11 @@ people who'll use it.
 
 ## 4. Update the live site after changes
 
-Every time you change something:
+If you changed `style.css` or `app.js`, first raise the `?v=` number on both
+of their lines in `index.html` (for example `?v=2` to `?v=3`). That makes
+browsers load the new files instead of an old saved copy.
+
+Then, every time you change something:
 
 ```bash
 cd ~/claude/leb-study-app
