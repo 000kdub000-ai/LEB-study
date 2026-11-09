@@ -24,6 +24,8 @@
   // ---------- Styles (kept here so the whole feature is one file) ----------
   const style = document.createElement("style");
   style.textContent = `
+    #brand h1 { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+      touch-action: manipulation; cursor: default; }
     .egg-duck { position: fixed; left: 0; bottom: max(14px, env(safe-area-inset-bottom));
       width: 76px; height: 76px; z-index: 50; pointer-events: none; }
     .egg-duck svg { width: 100%; height: 100%; overflow: visible; }
@@ -172,7 +174,7 @@
   // ---------- 2. Gravity ----------
   let falling = false;
   async function gravity() {
-    if (falling || !homeShown() || reduceMotion) return;
+    if (falling || !homeShown()) return;
     falling = true;
     const items = [document.getElementById("brand"),
       ...document.getElementById("home-view").children]
@@ -217,13 +219,24 @@
   });
 
   // Press and hold the title
-  let holdTimer;
-  title.addEventListener("pointerdown", () => {
+  // (Phones normally treat holding on text as "select this text", which
+  // cancels the hold, so the title turns off text selection and the
+  // copy/look-up menu, and a finger wobbling a little doesn't count as moving.)
+  let holdTimer, holdStart;
+  title.addEventListener("pointerdown", (e) => {
     heldDown = false;
+    holdStart = { x: e.clientX, y: e.clientY };
+    clearTimeout(holdTimer);
     holdTimer = setTimeout(() => { heldDown = true; gravity(); }, 800);
   });
-  ["pointerup", "pointerleave", "pointercancel"].forEach((type) =>
+  title.addEventListener("pointermove", (e) => {
+    if (holdStart && Math.hypot(e.clientX - holdStart.x, e.clientY - holdStart.y) > 12) {
+      clearTimeout(holdTimer);
+    }
+  });
+  ["pointerup", "pointercancel"].forEach((type) =>
     title.addEventListener(type, () => clearTimeout(holdTimer)));
+  title.addEventListener("contextmenu", (e) => e.preventDefault());
 
   // Shake the phone: two hard jolts within half a second. (iPhones only share
   // motion with sites that ask permission first, so there it's press-and-hold.)
