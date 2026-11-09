@@ -3,7 +3,9 @@
 //
 // 1. The duck: tap the "LEB Study" title 3 times quickly and a duck in a
 //    top hat waddles across the bottom of the screen. It also visits on its
-//    own about 1 in every 5 times the app is opened.
+//    own about 1 in every 5 times the app is opened. Every 3rd walk (counted
+//    across visits), Steamboat Willie (1928) walks up and shoots it with a cartoon
+//    shotgun: BLAM, soot, feathers, and the duck waddles off dazed.
 // 2. Gravity: shake your phone (or press G on a keyboard, or press and hold
 //    the title) and everything on the home screen falls into a pile, then
 //    floats back.
@@ -15,7 +17,8 @@
 //    After it leaves, it comes back on its own 5 to 10 minutes later. Hold
 //    the title for 5 seconds to bring it back right away.
 //
-// To see them on demand, open the app with ?duck, ?frog, ?deadfrog (the frog
+// To see them on demand, open the app with ?duck, ?ambush (with Willie),
+// ?frog, ?deadfrog (the frog
 // dies on the first tap) or ?boomfrog (it explodes on the first tap) at the
 // end of the address, for example index.html?duck.
 
@@ -43,6 +46,36 @@
     .egg-duck.tipping .egg-hat { transform: translate(1px, -3px) rotate(-18deg); }
     @keyframes egg-waddle { from { transform: rotate(-5deg); } to { transform: rotate(5deg) translateY(-1px); } }
     @keyframes egg-step { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+    .egg-duck .egg-soot-eyes { display: none; }
+    .egg-duck.sooty .egg-body { filter: brightness(0.28) saturate(0.2); }
+    .egg-duck.sooty .egg-soot-eyes { display: inline; }
+    .egg-duck.facing-left svg { transform: scaleX(-1); }
+
+    .egg-willie { position: fixed; left: 0; bottom: max(14px, env(safe-area-inset-bottom));
+      width: 84px; height: 116px; z-index: 51; pointer-events: none; }
+    .egg-willie svg { width: 100%; height: 100%; overflow: visible; }
+    /* Willie is black and white: a soft light outline keeps him visible at night */
+    @media (prefers-color-scheme: dark) {
+      .egg-willie svg { filter: drop-shadow(0 0 1px rgba(245, 238, 226, 0.9)) drop-shadow(0 0 1px rgba(245, 238, 226, 0.6)); }
+    }
+    .egg-willie.facing-right svg { transform: scaleX(-1); }
+    .egg-willie .egg-bubble { margin-bottom: 4px; }
+    .egg-willie.walking .egg-rbody { animation: egg-hop 0.3s ease-in-out infinite alternate; }
+    .egg-willie.walking .egg-leg-a { animation: egg-step 0.3s ease-in-out infinite alternate; }
+    .egg-willie.walking .egg-leg-b { animation: egg-step 0.3s ease-in-out infinite alternate-reverse; }
+    .egg-willie .egg-gun { transform-origin: 52px 66px; transition: transform 0.2s ease-out; }
+    .egg-willie.aiming .egg-gun { transform: rotate(4deg); }
+    @keyframes egg-hop { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+
+    .egg-shot { position: fixed; z-index: 52; pointer-events: none; }
+    .egg-blam { position: fixed; z-index: 53; pointer-events: none; margin: 0;
+      font: 44px var(--font-display); color: #C8342B; white-space: nowrap;
+      text-shadow: 2px 2px 0 #FFF3B0, -2px 2px 0 #FFF3B0, 2px -2px 0 #FFF3B0, -2px -2px 0 #FFF3B0,
+        0 4px 0 #6F1C22; }
+    .egg-smoke { position: fixed; z-index: 52; pointer-events: none; border-radius: 50%;
+      background: #CFCAC0; }
+    .egg-feather { position: fixed; z-index: 52; pointer-events: none; width: 12px; height: 5px;
+      border-radius: 50%; background: #F7D24A; border: 1px solid #C99A1E; }
 
     .egg-bubble { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
       background: var(--surface); color: var(--text); border: 1px solid var(--border);
@@ -108,6 +141,58 @@
           <path d="M34 0 v7" stroke="#F5EEE2" stroke-opacity="0.35" stroke-width="1.4" stroke-linecap="round"/>
         </g>
       </g>
+      <g class="egg-soot-eyes">
+        <circle cx="46" cy="24" r="3.2" fill="#fff"/>
+        <circle cx="46.6" cy="24.3" r="1.2" fill="#111318"/>
+      </g>
+    </svg>`;
+
+  // Steamboat Willie (the 1928 version, now public domain), side-on and
+  // facing left, in black and white, holding a double-barrel shotgun
+  // (80 x 110 drawing units)
+  const WILLIE_SVG = `
+    <svg viewBox="0 0 80 110" aria-hidden="true">
+      <path d="M58 84 q14 4 12 16 q-1 6 6 6" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round"/>
+      <g class="egg-leg-a">
+        <path d="M41 88 l-2 13" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="34" cy="103.5" rx="9.5" ry="5" fill="#F2F0EA" stroke="#111" stroke-width="1.3"/>
+      </g>
+      <g class="egg-leg-b">
+        <path d="M52 88 l1 13" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="48" cy="103.5" rx="9.5" ry="5" fill="#F2F0EA" stroke="#111" stroke-width="1.3"/>
+      </g>
+      <g class="egg-rbody">
+        <ellipse cx="46" cy="69" rx="11" ry="13" fill="#111"/>
+        <path d="M31 77 q15 -6 30 0 l1 11 q-16 5 -32 0 z" fill="#555" stroke="#111" stroke-width="1.3"/>
+        <ellipse cx="40" cy="81" rx="2.4" ry="3.4" fill="#F2F0EA"/>
+        <ellipse cx="51" cy="81" rx="2.4" ry="3.4" fill="#F2F0EA"/>
+        <circle cx="53" cy="19" r="9.5" fill="#111"/>
+        <circle cx="41" cy="40" r="14" fill="#111"/>
+        <ellipse cx="33" cy="42" rx="11.5" ry="10" fill="#F2F0EA"/>
+        <ellipse cx="21" cy="46.5" rx="10.5" ry="5.6" fill="#F2F0EA"/>
+        <ellipse cx="10.5" cy="45" rx="4.3" ry="3.5" fill="#111"/>
+        <path d="M13 50.5 q11 8 24 -1" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M24 54 q5 3.5 10 -1.5 q-5 0.2 -10 1.5 z" fill="#111"/>
+        <ellipse cx="30" cy="38" rx="2.5" ry="5.2" fill="#111"/>
+        <ellipse cx="35.6" cy="38" rx="2.5" ry="5.2" fill="#111"/>
+        <path d="M30.4 33.8 l1.8 -0.4 l-0.6 2.6 z M36 33.8 l1.8 -0.4 l-0.6 2.6 z" fill="#F2F0EA"/>
+        <circle cx="31" cy="19" r="9.5" fill="#111"/>
+        <g>
+          <path d="M36 25 q1 -13 8 -14 q8 0 9 13 z" fill="#F2F0EA" stroke="#111" stroke-width="1.3"/>
+          <rect x="36" y="21" width="17" height="3.6" fill="#111"/>
+          <path d="M30 26.5 q12 -4 25 -1 l-1 2.4 q-12 -2 -23.5 1 z" fill="#111"/>
+        </g>
+        <g class="egg-gun">
+          <rect x="-14" y="61" width="58" height="3.2" rx="1" fill="#3B3F47"/>
+          <rect x="-14" y="64.6" width="58" height="3.2" rx="1" fill="#2C3036"/>
+          <path d="M42 60 h12 l10 10 q1 4 -3 5 l-11 -6 h-8 z" fill="#8A8A8A" stroke="#111" stroke-width="1"/>
+          <rect x="18" y="63" width="12" height="7" rx="2" fill="#8A8A8A" stroke="#111" stroke-width="0.8"/>
+        </g>
+        <path d="M44 60 q-10 2 -18 5" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+        <path d="M50 61 q4 3 4 6" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="25" cy="65.5" r="3.6" fill="#111"/>
+        <circle cx="54.5" cy="67.5" r="3.6" fill="#111"/>
+      </g>
     </svg>`;
 
   // A small round frog, facing you (40 x 34 drawing units).
@@ -146,9 +231,23 @@
 
   // ---------- 1. The duck ----------
   let duckBusy = false;
+  const DUCK_WALKS_KEY = "leb-duck-walks";
+  const AMBUSH_EVERY = 3; // every 3rd walk, Steamboat Willie shows up
+
+  // Add one to the saved walk count and return the new total
+  function countDuckWalk() {
+    let walks = 1;
+    try {
+      walks = (parseInt(localStorage.getItem(DUCK_WALKS_KEY), 10) || 0) + 1;
+      localStorage.setItem(DUCK_WALKS_KEY, walks);
+    } catch (e) {}
+    return walks;
+  }
+
   async function duckWalk() {
     if (duckBusy) return;
     duckBusy = true;
+    const ambush = params.has("ambush") || countDuckWalk() % AMBUSH_EVERY === 0;
     const duck = document.createElement("div");
     duck.className = "egg-duck walking";
     duck.innerHTML = DUCK_SVG;
@@ -171,10 +270,112 @@
     await say(duck, "quack.", 1300);
     duck.classList.remove("tipping");
     await wait(250);
-    duck.classList.add("walking");
-    await step(middle, innerWidth + 10, 1700);    // waddle off
+    if (ambush) {
+      await willieAmbush(duck, middle);
+    } else {
+      duck.classList.add("walking");
+      await step(middle, innerWidth + 10, 1700);  // waddle off
+    }
     duck.remove();
     duckBusy = false;
+  }
+
+  // Willie walks up, aims, BLAM. The duck is left sooty with its hat
+  // spinning off; Willie says "heh." and leaves, and the duck waddles
+  // back the way it came.
+  async function willieAmbush(duck, duckX) {
+    const willie = document.createElement("div");
+    willie.className = "egg-willie walking";
+    willie.innerHTML = WILLIE_SVG;
+    document.body.append(willie);
+    const rw = 84;
+    const stopX = Math.min(duckX + 76 + 52, innerWidth - rw - 4);
+    const move = (el, from, to, ms) => el.animate(
+      [{ transform: `translateX(${from}px)` }, { transform: `translateX(${to}px)` }],
+      { duration: ms, fill: "forwards" }).finished;
+
+    await move(willie, innerWidth + 10, stopX, 1600);   // walks in
+    willie.classList.remove("walking");
+    await say(willie, "♪ ♫", 800);
+    await say(duck, "?", 700);
+    willie.classList.add("aiming");
+    await wait(450);
+
+    // BLAM: flash at the end of the barrels, the word, smoke
+    const box = willie.getBoundingClientRect();
+    const scale = box.width / 80;
+    const mx = box.left - 14 * scale, my = box.top + 63 * scale;
+    const flash = document.createElement("div");
+    flash.className = "egg-shot";
+    Object.assign(flash.style, { left: mx - 26 + "px", top: my - 22 + "px", width: "44px", height: "44px" });
+    flash.innerHTML = `<svg viewBox="-50 -50 100 100" width="44" height="44">
+      <polygon points="-50,0 -12,-14 -30,-40 0,-16 18,-34 10,-6 46,0 10,8 20,34 -2,14 -28,38 -14,10"
+        fill="#FFB52E" stroke="#E0662A" stroke-width="3"/></svg>`;
+    const blam = el("p", "BLAM!", "egg-blam");
+    Object.assign(blam.style, { left: (mx + duckX + 38) / 2 + "px", top: my - 110 + "px" });
+    document.body.append(flash, blam);
+    const smoke = [0, 1, 2, 3].map((i) => {
+      const puff = document.createElement("span");
+      puff.className = "egg-smoke";
+      const size = 16 + i * 6;
+      Object.assign(puff.style, { width: size + "px", height: size + "px",
+        left: mx - size / 2 - i * 6 + "px", top: my - size / 2 + "px" });
+      document.body.append(puff);
+      return puff;
+    });
+    const feathers = [0, 1, 2, 3, 4].map(() => {
+      const f = document.createElement("span");
+      f.className = "egg-feather";
+      const d = duck.getBoundingClientRect();
+      Object.assign(f.style, { left: d.left + 20 + Math.random() * 36 + "px", top: d.top + 30 + "px" });
+      document.body.append(f);
+      return f;
+    });
+
+    duck.classList.add("sooty");
+    willie.animate([{ transform: `translateX(${stopX}px)` }, { transform: `translateX(${stopX + 8}px)` },
+      { transform: `translateX(${stopX}px)` }], { duration: 220, fill: "forwards" }); // kick
+    flash.animate([{ transform: "scale(0.3)", opacity: 1 }, { transform: "scale(1.3)", opacity: 1, offset: 0.4 },
+      { transform: "scale(1)", opacity: 0 }], { duration: 300, fill: "forwards" });
+    blam.animate([
+      { transform: "translateX(-50%) scale(0.2) rotate(-14deg)", opacity: 0 },
+      { transform: "translateX(-50%) scale(1.2) rotate(-8deg)", opacity: 1, offset: 0.5 },
+      { transform: "translateX(-50%) scale(1) rotate(-8deg)", opacity: 1, offset: 0.8 },
+      { transform: "translateX(-50%) scale(1) rotate(-8deg)", opacity: 0 },
+    ], { duration: 1500, fill: "forwards" });
+    smoke.forEach((puff, i) => puff.animate([
+      { transform: "scale(0.4)", opacity: 0.9 },
+      { transform: `translate(${-10 - i * 8}px, ${-30 - i * 12}px) scale(1.8)`, opacity: 0 },
+    ], { duration: 1200 + i * 200, easing: "ease-out", fill: "forwards" }));
+    feathers.forEach((f, i) => f.animate([
+      { transform: "translate(0, 0) rotate(0deg)", opacity: 1 },
+      { transform: `translate(${(i - 2) * 14}px, -40px) rotate(${90 * i}deg)`, opacity: 1, offset: 0.3 },
+      { transform: `translate(${(i - 2) * 22 + 10}px, 30px) rotate(${200 + 90 * i}deg)`, opacity: 0 },
+    ], { duration: 1800 + i * 150, easing: "ease-out", fill: "forwards" }));
+    // The hat spins up into the air and lands back on, crooked
+    const hat = duck.querySelector(".egg-hat");
+    hat.style.transition = "none";
+    hat.animate([
+      { transform: "none" },
+      { transform: "translate(-6px, -60px) rotate(-200deg)", offset: 0.45 },
+      { transform: "translate(1px, -2px) rotate(-372deg)", offset: 0.9 },
+      { transform: "translate(1px, -1px) rotate(-372deg)" },
+    ], { duration: 1100, easing: "ease-in-out", fill: "forwards" });
+
+    await wait(1300);
+    willie.classList.remove("aiming");
+    await say(duck, "...", 1000);
+    await say(willie, "heh.", 900);
+    [flash, blam, ...smoke, ...feathers].forEach((n) => n.remove());
+
+    // Both leave: Willie back to the right, the duck back to the left
+    willie.classList.add("facing-right", "walking");
+    duck.classList.add("facing-left", "walking");
+    await Promise.all([
+      move(willie, stopX, innerWidth + 10, 1500),
+      move(duck, duckX, -90, 2300),
+    ]);
+    willie.remove();
   }
 
   // Three quick taps on the title
@@ -192,7 +393,7 @@
   });
 
   // Rare visit
-  if (params.has("duck") || (!reduceMotion && Math.random() < DUCK_CHANCE)) {
+  if (params.has("duck") || params.has("ambush") || (!reduceMotion && Math.random() < DUCK_CHANCE)) {
     setTimeout(() => homeShown() && duckWalk(), 2500);
   }
 
