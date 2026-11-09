@@ -8,10 +8,12 @@
 //    the title) and everything on the home screen falls into a pile, then
 //    floats back.
 // 3. The frog: about 1 in every 5 visits, a tiny frog sits in a corner of the
-//    home screen. Tap it and it croaks and jumps to another corner.
+//    home screen. Tap it and it usually says "ribbit" and jumps to another
+//    corner, but about 1 tap in 5 it says "ow!", flips onto its back with X
+//    eyes, and falls off the bottom of the screen.
 //
-// To see them on demand, open the app with ?duck or ?frog at the end of the
-// address (for example index.html?duck).
+// To see them on demand, open the app with ?duck, ?frog or ?deadfrog (the
+// frog dies on the first tap) at the end of the address, e.g. index.html?duck.
 
 (() => {
   const DUCK_CHANCE = 1 / 5;
@@ -51,6 +53,9 @@
     .egg-frog { position: fixed; width: 34px; height: 30px; z-index: 40; padding: 0; border: 0;
       background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .egg-frog svg { width: 100%; height: 100%; overflow: visible; }
+    .egg-frog .egg-dead, .egg-frog.dead .egg-alive { display: none; }
+    .egg-frog.dead .egg-dead { display: inline; }
+    .egg-frog.dead { cursor: default; }
     .egg-frog[data-corner="tl"] { top: max(12px, env(safe-area-inset-top)); left: 12px; }
     .egg-frog[data-corner="tr"] { top: max(12px, env(safe-area-inset-top)); right: 12px; }
     .egg-frog[data-corner="bl"] { bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; }
@@ -100,8 +105,14 @@
       <circle cx="29" cy="11" r="6" fill="#6BAF4F" stroke="#3F7A2E" stroke-width="1.2"/>
       <circle cx="11" cy="10.5" r="3.6" fill="#fff"/>
       <circle cx="29" cy="10.5" r="3.6" fill="#fff"/>
-      <circle cx="11.6" cy="11" r="2" fill="#25344F"/>
-      <circle cx="28.4" cy="11" r="2" fill="#25344F"/>
+      <g class="egg-alive">
+        <circle cx="11.6" cy="11" r="2" fill="#25344F"/>
+        <circle cx="28.4" cy="11" r="2" fill="#25344F"/>
+      </g>
+      <g class="egg-dead" stroke="#25344F" stroke-width="1.4" stroke-linecap="round">
+        <path d="M9 8.5 l4 4 M13 8.5 l-4 4 M27 8.5 l4 4 M31 8.5 l-4 4"/>
+        <ellipse cx="23" cy="22.6" rx="1.7" ry="2.6" fill="#E5737A" stroke="#B9505A" stroke-width="0.8"/>
+      </g>
       <path d="M13 19 q7 5 14 0" fill="none" stroke="#2F5E22" stroke-width="1.4" stroke-linecap="round"/>
       <ellipse cx="8.5" cy="19" rx="2" ry="1.2" fill="#E58A7B" opacity="0.55"/>
       <ellipse cx="31.5" cy="19" rx="2" ry="1.2" fill="#E58A7B" opacity="0.55"/>
@@ -256,7 +267,11 @@
   });
 
   // ---------- 3. The frog ----------
-  if (params.has("frog") || Math.random() < FROG_CHANCE) {
+  // Each tap: usually "ribbit" and a jump to another corner. About 1 tap in
+  // 5 (the very first tap too, with ?deadfrog) it says "ow!", flips onto its
+  // back with X eyes, and drops off the bottom of the screen.
+  const FROG_DIES_CHANCE = 1 / 5;
+  if (params.has("frog") || params.has("deadfrog") || Math.random() < FROG_CHANCE) {
     const corners = ["tl", "tr", "bl", "br"];
     const pick = (not) => {
       const options = corners.filter((c) => c !== not);
@@ -275,26 +290,55 @@
       { attributes: true, attributeFilter: ["hidden"] });
     showFrog();
 
-    let jumping = false;
+    let busy = false;
+    let forceDeath = params.has("deadfrog");
     frog.addEventListener("click", async () => {
-      if (jumping) return;
-      jumping = true;
+      if (busy) return;
+      busy = true;
+      if (forceDeath || Math.random() < FROG_DIES_CHANCE) await frogDies();
+      else await frogJumps();
+      forceDeath = false;
+      busy = false;
+    });
+
+    async function frogJumps() {
       await say(frog, "ribbit", 700);
-      // Jump: move to the new corner, then animate from the old spot in an arc
+      // Move to the new corner, then animate from the old spot in an arc
       const from = frog.getBoundingClientRect();
       frog.dataset.corner = pick(frog.dataset.corner);
       const to = frog.getBoundingClientRect();
       const dx = from.left - to.left, dy = from.top - to.top;
       const lift = Math.min(160, Math.abs(dx) / 2 + Math.abs(dy) / 3 + 60);
-      if (!reduceMotion) {
-        await frog.animate([
-          { transform: `translate(${dx}px, ${dy}px) scale(1.1, 0.85)` },
-          { transform: `translate(${dx / 2}px, ${dy / 2 - lift}px) scale(0.9, 1.15)` },
-          { transform: "translate(0, 0) scale(1.1, 0.85)", offset: 0.9 },
-          { transform: "none" },
-        ], { duration: 700, easing: "ease-in-out" }).finished;
-      }
-      jumping = false;
-    });
+      if (reduceMotion) return;
+      await frog.animate([
+        { transform: `translate(${dx}px, ${dy}px) scale(1.1, 0.85)` },
+        { transform: `translate(${dx / 2}px, ${dy / 2 - lift}px) scale(0.9, 1.15)` },
+        { transform: "translate(0, 0) scale(1.1, 0.85)", offset: 0.9 },
+        { transform: "none" },
+      ], { duration: 700, easing: "ease-in-out" }).finished;
+    }
+
+    async function frogDies() {
+      frog.classList.add("dead");
+      frog.setAttribute("aria-label", "A frog (deceased)");
+      say(frog, "ow!", 1300);
+      // Flip onto its back
+      await frog.querySelector("svg").animate([
+        { transform: "none" },
+        { transform: "translateY(-10px) rotate(100deg)", offset: 0.45 },
+        { transform: "translateY(2px) rotate(180deg)", offset: 0.85 },
+        { transform: "rotate(180deg)" },
+      ], { duration: reduceMotion ? 1 : 550, easing: "ease-out", fill: "forwards" }).finished;
+      await wait(1500);
+      // Drop off the bottom of the screen, picking up speed
+      const fall = innerHeight - frog.getBoundingClientRect().top + 60;
+      const spin = Math.random() < 0.5 ? -40 : 40;
+      await frog.animate([
+        { transform: "none" },
+        { transform: `translateY(-14px) rotate(${spin / 4}deg)`, offset: 0.12, easing: "cubic-bezier(.55,0,1,.45)" },
+        { transform: `translateY(${fall}px) rotate(${spin}deg)` },
+      ], { duration: reduceMotion ? 1 : 500 + fall * 0.9, fill: "forwards" }).finished;
+      frog.remove();
+    }
   }
 })();
