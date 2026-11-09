@@ -12,6 +12,8 @@
 //    corner, but about 1 tap in 5 it says "ow!", flips onto its back with X
 //    eyes, and falls off the bottom of the screen. Every 3rd time it dies
 //    (counted across visits), it explodes instead, filling the whole screen.
+//    After it leaves, it comes back on its own 5 to 10 minutes later. Hold
+//    the title for 5 seconds to bring it back right away.
 //
 // To see them on demand, open the app with ?duck, ?frog, ?deadfrog (the frog
 // dies on the first tap) or ?boomfrog (it explodes on the first tap) at the
@@ -245,20 +247,26 @@
   // (Phones normally treat holding on text as "select this text", which
   // cancels the hold, so the title turns off text selection and the
   // copy/look-up menu, and a finger wobbling a little doesn't count as moving.)
-  let holdTimer, holdStart;
+  // Hold for 5 seconds (gravity happens along the way) and the frog comes back.
+  // Letting go and moving are watched on the whole page, because gravity
+  // moves the title out from under your finger.
+  let holdTimer, frogHoldTimer, holdStart;
+  const stopHold = () => {
+    clearTimeout(holdTimer);
+    clearTimeout(frogHoldTimer);
+    holdStart = null;
+  };
   title.addEventListener("pointerdown", (e) => {
     heldDown = false;
+    stopHold();
     holdStart = { x: e.clientX, y: e.clientY };
-    clearTimeout(holdTimer);
     holdTimer = setTimeout(() => { heldDown = true; gravity(); }, 800);
+    frogHoldTimer = setTimeout(() => spawnFrog({ popIn: true }), 5000);
   });
-  title.addEventListener("pointermove", (e) => {
-    if (holdStart && Math.hypot(e.clientX - holdStart.x, e.clientY - holdStart.y) > 12) {
-      clearTimeout(holdTimer);
-    }
+  addEventListener("pointermove", (e) => {
+    if (holdStart && Math.hypot(e.clientX - holdStart.x, e.clientY - holdStart.y) > 12) stopHold();
   });
-  ["pointerup", "pointercancel"].forEach((type) =>
-    title.addEventListener(type, () => clearTimeout(holdTimer)));
+  ["pointerup", "pointercancel"].forEach((type) => addEventListener(type, stopHold));
   title.addEventListener("contextmenu", (e) => e.preventDefault());
 
   // Shake the phone: two hard jolts within half a second. (iPhones only share
@@ -285,8 +293,19 @@
   const FROG_DIES_CHANCE = 1 / 5;
   const FROG_EXPLODES_EVERY = 3; // every 3rd death is an explosion
   const DEATHS_KEY = "leb-frog-deaths";
-  if (params.has("frog") || params.has("deadfrog") || params.has("boomfrog") ||
-      Math.random() < FROG_CHANCE) {
+  const RETURN_KEY = "leb-frog-returns-at"; // when a frog that left comes back
+  const RETURN_MIN = 5 * 60 * 1000, RETURN_MAX = 10 * 60 * 1000;
+  let returnTimer;
+
+  // Put a frog in a corner of the home screen (unless one is already there).
+  // death: "dies" or "explodes" makes the first tap kill it (for ?deadfrog
+  // and ?boomfrog). popIn: a little entrance, for a frog that comes back.
+  function spawnFrog({ death = "", popIn = false } = {}) {
+    if (document.querySelector(".egg-frog")) return;
+    // The frog is back, so nothing is waiting to bring it back
+    clearTimeout(returnTimer);
+    try { localStorage.removeItem(RETURN_KEY); } catch (e) {}
+
     const corners = ["tl", "tr", "bl", "br"];
     const pick = (not) => {
       const options = corners.filter((c) => c !== not);
@@ -301,12 +320,27 @@
 
     // Only on the home screen
     const showFrog = () => (frog.hidden = !homeShown());
-    new MutationObserver(showFrog).observe(document.getElementById("home-view"),
+    const watcher = new MutationObserver(showFrog);
+    watcher.observe(document.getElementById("home-view"),
       { attributes: true, attributeFilter: ["hidden"] });
     showFrog();
+    if (popIn && !reduceMotion) {
+      frog.animate([
+        { transform: "translateY(16px) scale(0.2)", opacity: 0 },
+        { transform: "translateY(-10px) scale(1.15, 0.9)", opacity: 1, offset: 0.6 },
+        { transform: "none" },
+      ], { duration: 500, easing: "ease-out" });
+    }
+
+    // The frog leaves (falls or explodes): it comes back in 5 to 10 minutes
+    function leave() {
+      watcher.disconnect();
+      frog.remove();
+      frogLeft();
+    }
 
     let busy = false;
-    let forceDeath = params.has("deadfrog") || params.has("boomfrog");
+    let forceDeath = Boolean(death);
     frog.addEventListener("click", async () => {
       if (busy) return;
       busy = true;
@@ -345,7 +379,7 @@
         { transform: "rotate(180deg)" },
       ], { duration: reduceMotion ? 1 : 550, easing: "ease-out", fill: "forwards" }).finished;
       await wait(1500);
-      if (params.has("boomfrog") || countDeath() % FROG_EXPLODES_EVERY === 0) {
+      if (death === "explodes" || countDeath() % FROG_EXPLODES_EVERY === 0) {
         await explode();
         return;
       }
@@ -357,7 +391,7 @@
         { transform: `translateY(-14px) rotate(${spin / 4}deg)`, offset: 0.12, easing: "cubic-bezier(.55,0,1,.45)" },
         { transform: `translateY(${fall}px) rotate(${spin}deg)` },
       ], { duration: reduceMotion ? 1 : 500 + fall * 0.9, fill: "forwards" }).finished;
-      frog.remove();
+      leave();
     }
 
     // Add one to the saved death count and return the new total. (try/catch:
@@ -386,7 +420,7 @@
       }
       const box = frog.getBoundingClientRect();
       const cx = box.left + box.width / 2, cy = box.top + box.height / 2;
-      frog.remove();
+      leave();
 
       // The burst grows out of the frog and settles in the middle of the
       // screen, big enough that its solid part (62% of its size) reaches
@@ -465,4 +499,26 @@
       }).join(" ");
     }
   }
+
+  // Save when the frog comes back (5 to 10 minutes from now). Saved, so it
+  // still comes back on time if the app is closed and opened again.
+  function frogLeft() {
+    const at = Date.now() + RETURN_MIN + Math.random() * (RETURN_MAX - RETURN_MIN);
+    try { localStorage.setItem(RETURN_KEY, at); } catch (e) {}
+    scheduleReturn(at);
+  }
+
+  function scheduleReturn(at) {
+    clearTimeout(returnTimer);
+    returnTimer = setTimeout(() => spawnFrog({ popIn: true }), Math.max(0, at - Date.now()));
+  }
+
+  // When the app opens
+  let returnsAt = null;
+  try { returnsAt = parseInt(localStorage.getItem(RETURN_KEY), 10) || null; } catch (e) {}
+  if (params.has("boomfrog")) spawnFrog({ death: "explodes" });
+  else if (params.has("deadfrog")) spawnFrog({ death: "dies" });
+  else if (params.has("frog")) spawnFrog();
+  else if (returnsAt) scheduleReturn(returnsAt); // right away if it's already time
+  else if (Math.random() < FROG_CHANCE) spawnFrog();
 })();
