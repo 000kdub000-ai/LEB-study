@@ -10,10 +10,12 @@
 // 3. The frog: about 1 in every 5 visits, a tiny frog sits in a corner of the
 //    home screen. Tap it and it usually says "ribbit" and jumps to another
 //    corner, but about 1 tap in 5 it says "ow!", flips onto its back with X
-//    eyes, and falls off the bottom of the screen.
+//    eyes, and falls off the bottom of the screen. Every 3rd time it dies
+//    (counted across visits), it explodes instead, filling the whole screen.
 //
-// To see them on demand, open the app with ?duck, ?frog or ?deadfrog (the
-// frog dies on the first tap) at the end of the address, e.g. index.html?duck.
+// To see them on demand, open the app with ?duck, ?frog, ?deadfrog (the frog
+// dies on the first tap) or ?boomfrog (it explodes on the first tap) at the
+// end of the address, for example index.html?duck.
 
 (() => {
   const DUCK_CHANCE = 1 / 5;
@@ -56,6 +58,16 @@
     .egg-frog .egg-dead, .egg-frog.dead .egg-alive { display: none; }
     .egg-frog.dead .egg-dead { display: inline; }
     .egg-frog.dead { cursor: default; }
+    .egg-boom { position: fixed; inset: 0; z-index: 100; pointer-events: none; overflow: hidden; }
+    .egg-boom .egg-flash { position: absolute; inset: 0; background: #FFF8D6; }
+    .egg-boom .egg-burst { position: absolute; }
+    .egg-boom .egg-burst svg { width: 100%; height: 100%; display: block; }
+    .egg-boom .egg-boom-word { position: absolute; left: 50%; top: 45%; margin: 0;
+      font: 72px var(--font-display); color: #8C2430; letter-spacing: 2px;
+      text-shadow: 2px 2px 0 #FFF3B0, -2px 2px 0 #FFF3B0, 2px -2px 0 #FFF3B0, -2px -2px 0 #FFF3B0,
+        0 6px 0 #6F1C22; white-space: nowrap; }
+    .egg-boom .egg-bit { position: absolute; width: 16px; height: 12px; border-radius: 50%;
+      background: #6BAF4F; border: 1.5px solid #3F7A2E; }
     .egg-frog[data-corner="tl"] { top: max(12px, env(safe-area-inset-top)); left: 12px; }
     .egg-frog[data-corner="tr"] { top: max(12px, env(safe-area-inset-top)); right: 12px; }
     .egg-frog[data-corner="bl"] { bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; }
@@ -271,7 +283,10 @@
   // 5 (the very first tap too, with ?deadfrog) it says "ow!", flips onto its
   // back with X eyes, and drops off the bottom of the screen.
   const FROG_DIES_CHANCE = 1 / 5;
-  if (params.has("frog") || params.has("deadfrog") || Math.random() < FROG_CHANCE) {
+  const FROG_EXPLODES_EVERY = 3; // every 3rd death is an explosion
+  const DEATHS_KEY = "leb-frog-deaths";
+  if (params.has("frog") || params.has("deadfrog") || params.has("boomfrog") ||
+      Math.random() < FROG_CHANCE) {
     const corners = ["tl", "tr", "bl", "br"];
     const pick = (not) => {
       const options = corners.filter((c) => c !== not);
@@ -291,7 +306,7 @@
     showFrog();
 
     let busy = false;
-    let forceDeath = params.has("deadfrog");
+    let forceDeath = params.has("deadfrog") || params.has("boomfrog");
     frog.addEventListener("click", async () => {
       if (busy) return;
       busy = true;
@@ -330,6 +345,10 @@
         { transform: "rotate(180deg)" },
       ], { duration: reduceMotion ? 1 : 550, easing: "ease-out", fill: "forwards" }).finished;
       await wait(1500);
+      if (params.has("boomfrog") || countDeath() % FROG_EXPLODES_EVERY === 0) {
+        await explode();
+        return;
+      }
       // Drop off the bottom of the screen, picking up speed
       const fall = innerHeight - frog.getBoundingClientRect().top + 60;
       const spin = Math.random() < 0.5 ? -40 : 40;
@@ -339,6 +358,111 @@
         { transform: `translateY(${fall}px) rotate(${spin}deg)` },
       ], { duration: reduceMotion ? 1 : 500 + fall * 0.9, fill: "forwards" }).finished;
       frog.remove();
+    }
+
+    // Add one to the saved death count and return the new total. (try/catch:
+    // if the browser blocks storage, every death counts as the first.)
+    function countDeath() {
+      let deaths = 1;
+      try {
+        deaths = (parseInt(localStorage.getItem(DEATHS_KEY), 10) || 0) + 1;
+        localStorage.setItem(DEATHS_KEY, deaths);
+      } catch (e) {}
+      return deaths;
+    }
+
+    // Swell up, tremble, then a cartoon blast that fills the whole screen
+    async function explode() {
+      const svg = frog.querySelector("svg");
+      if (!reduceMotion) {
+        await svg.animate([
+          { transform: "rotate(180deg)" },
+          { transform: "rotate(172deg) scale(1.4)" },
+          { transform: "rotate(188deg) scale(1.6)" },
+          { transform: "rotate(170deg) scale(1.9)" },
+          { transform: "rotate(190deg) scale(2.2)" },
+          { transform: "rotate(180deg) scale(2.6)" },
+        ], { duration: 800, easing: "ease-in", fill: "forwards" }).finished;
+      }
+      const box = frog.getBoundingClientRect();
+      const cx = box.left + box.width / 2, cy = box.top + box.height / 2;
+      frog.remove();
+
+      // The burst grows out of the frog and settles in the middle of the
+      // screen, big enough that its solid part (62% of its size) reaches
+      // every corner
+      const mx = innerWidth / 2, my = innerHeight / 2;
+      const far = Math.hypot(mx, my);
+      const size = (2 * far) / 0.62;
+
+      const boom = document.createElement("div");
+      boom.className = "egg-boom";
+      boom.setAttribute("aria-hidden", "true");
+      const flash = document.createElement("div");
+      flash.className = "egg-flash";
+      const burst = document.createElement("div");
+      burst.className = "egg-burst";
+      Object.assign(burst.style, { width: size + "px", height: size + "px",
+        left: mx - size / 2 + "px", top: my - size / 2 + "px" });
+      burst.innerHTML = `<svg viewBox="-100 -100 200 200">
+        <polygon points="${star(18, 100, 62)}" fill="#C8342B"/>
+        <polygon points="${star(14, 82, 50)}" fill="#F08A24" transform="rotate(9)"/>
+        <polygon points="${star(12, 62, 40)}" fill="#FFD23F" transform="rotate(4)"/>
+        <circle r="30" fill="#FFF3B0"/>
+      </svg>`;
+      const word = el("p", "BOOM!", "egg-boom-word");
+      boom.append(burst, flash, word);
+      // Bits of frog flying out
+      const bits = Array.from({ length: 14 }, () => {
+        const bit = document.createElement("span");
+        bit.className = "egg-bit";
+        Object.assign(bit.style, { left: cx - 8 + "px", top: cy - 6 + "px" });
+        boom.append(bit);
+        return bit;
+      });
+      document.body.append(boom);
+
+      const runs = [
+        flash.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 350, fill: "forwards" }),
+        burst.animate([
+          { transform: `translate(${cx - mx}px, ${cy - my}px) scale(0.03) rotate(-20deg)` },
+          { transform: "scale(1.05) rotate(4deg)", offset: 0.7 },
+          { transform: "scale(1) rotate(0deg)" },
+        ], { duration: reduceMotion ? 1 : 450, easing: "ease-out", fill: "forwards" }),
+        word.animate([
+          { transform: "translate(-50%, -50%) scale(0.2) rotate(-12deg)", opacity: 0 },
+          { transform: "translate(-50%, -50%) scale(1.25) rotate(-6deg)", opacity: 1, offset: 0.6 },
+          { transform: "translate(-50%, -50%) scale(1) rotate(-6deg)", opacity: 1 },
+        ], { duration: reduceMotion ? 1 : 500, delay: 120, easing: "ease-out", fill: "forwards" }),
+        ...bits.map((bit, i) => {
+          const angle = (i / bits.length) * Math.PI * 2 + Math.random() * 0.5;
+          const dist = far * (0.35 + Math.random() * 0.45);
+          return bit.animate([
+            { transform: "none" },
+            { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) rotate(${360 + Math.random() * 360}deg)` },
+          ], { duration: reduceMotion ? 1 : 1100, easing: "cubic-bezier(.2,.7,.4,1)", fill: "forwards" });
+        }),
+      ];
+      // Shake the page behind it
+      if (!reduceMotion) {
+        ["brand", "home-view"].forEach((id) => document.getElementById(id).animate(
+          [0, 1, 2, 3, 4, 5, 6, 7].map((n) => ({
+            transform: n === 7 ? "none" : `translate(${(Math.random() - 0.5) * 16}px, ${(Math.random() - 0.5) * 16}px)` })),
+          { duration: 450 }));
+      }
+      await Promise.all(runs.map((a) => a.finished));
+      await wait(700);
+      await boom.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 800, fill: "forwards" }).finished;
+      boom.remove();
+    }
+
+    // Points for a spiky star: `spikes` points between radius `outer` and `inner`
+    function star(spikes, outer, inner) {
+      return Array.from({ length: spikes * 2 }, (_, i) => {
+        const r = i % 2 ? inner : outer * (0.85 + Math.random() * 0.15);
+        const a = (i / (spikes * 2)) * Math.PI * 2;
+        return `${(Math.cos(a) * r).toFixed(1)},${(Math.sin(a) * r).toFixed(1)}`;
+      }).join(" ");
     }
   }
 })();
