@@ -1,11 +1,11 @@
-// One section of study material. Each question looks like one of these:
+// One chapter of study material. Each question looks like one of these:
 //   Multiple choice: {"q": "Question?", "options": ["A", "B", "C"], "answer": "B"}
 //   True/false:      {"q": "Statement.", "answer": true}
 //   Select all:      {"q": "Choose two.", "options": ["A", "B", "C"], "answer": ["A", "C"]}
 // The answer is the exact option text. No answer yet? Leave "answer" out
 // (and add "multi": true for a select-all question). Optional: "note".
 STUDY.push({
-  section: "Section 1: Nature and Classification of Contracts",
+  section: "Chapter 11: Nature and Classification of Contracts",
   topics: {
     "Purpose and Importance of Contract Law": [
       {"q": "Odette, a certified public accountant, agrees to perform an audit for Personnel Inc. These parties are most likely to follow the rules of contract law in order to", "options": ["avoid potential disputes", "acquire business acumen", "obtain confidential information", "satisfy a moral obligation"], "answer": "avoid potential disputes"},

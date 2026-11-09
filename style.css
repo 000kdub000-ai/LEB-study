@@ -148,9 +148,6 @@ select {
 .segmented small { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
 .segmented label:has(input:checked) { background: var(--chosen-bg); border-color: var(--chosen-bg); color: var(--chosen-text); }
 .segmented label:has(input:checked) small { color: var(--chosen-text); opacity: 0.85; }
-/* Section buttons: as many columns as fit, so more sections can be added */
-#section-buttons { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
-#section-buttons label { padding: 12px 10px; white-space: nowrap; }
 
 .actions { display: grid; gap: 10px; }
 .choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

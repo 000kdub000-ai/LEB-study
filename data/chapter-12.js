@@ -1,11 +1,11 @@
-// One section of study material. Each question looks like one of these:
+// One chapter of study material. Each question looks like one of these:
 //   Multiple choice: {"q": "Question?", "options": ["A", "B", "C"], "answer": "B"}
 //   True/false:      {"q": "Statement.", "answer": true}
 //   Select all:      {"q": "Choose two.", "options": ["A", "B", "C"], "answer": ["A", "C"]}
 // The answer is the exact option text. No answer yet? Leave "answer" out
 // (and add "multi": true for a select-all question). Optional: "note".
 STUDY.push({
-  section: "Section 2: Agreement — Offer, Acceptance, and E-Contracts",
+  section: "Chapter 12: Agreement — Offer, Acceptance, and E-Contracts",
   topics: {
     "Requirements of the Offer: Elements Overview": [
       {"q": "An offer has specific requirements. What are the elements for an effective offer? Choose three answers.", "options": ["The offeror must have a serious intention to become bound by the offer", "The terms of the offer must be reasonably certain, or definite, so that the parties and the court can ascertain the terms of the contract", "The offer must be communicated to the offeree", "The offer must be between two parties only"], "answer": ["The offeror must have a serious intention to become bound by the offer", "The terms of the offer must be reasonably certain, or definite, so that the parties and the court can ascertain the terms of the contract", "The offer must be communicated to the offeree"]},

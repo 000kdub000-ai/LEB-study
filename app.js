@@ -91,31 +91,22 @@ function showView(name) {
 
 // ---------- 4. Home screen ----------
 
-// Make one button for "All" plus one per section (e.g. "Section 1")
-function buildSectionButtons() {
-  const choices = [{ value: "all", name: "All", count: QUESTIONS.length }];
-  STUDY.forEach((sec) => choices.push({
-    value: sec.section,
-    name: sec.section.split(":")[0],
-    count: QUESTIONS.filter((q) => q.section === sec.section).length,
-  }));
-  choices.forEach((choice, i) => {
-    const input = document.createElement("input");
-    input.type = "radio";
-    input.name = "section";
-    input.value = choice.value;
-    input.checked = i === 0;
-    input.addEventListener("change", sectionChanged);
-    const label = el("label");
-    label.append(input, choice.name + " ", el("small", `${choice.count} questions`));
-    $("section-buttons").append(label);
+// Fill the chapter dropdown: "All chapters" plus one choice per data file
+// (each data file's "section" is its chapter, e.g. "Chapter 11: ...")
+function buildChapterSelect() {
+  const select = $("chapter-select");
+  select.append(new Option(`All chapters (${QUESTIONS.length})`, "all"));
+  STUDY.forEach((sec) => {
+    const count = QUESTIONS.filter((q) => q.section === sec.section).length;
+    select.append(new Option(`${sec.section} (${count})`, sec.section));
   });
+  select.addEventListener("change", sectionChanged);
 }
 
-const selectedSection = () => document.querySelector('input[name="section"]:checked').value;
+const selectedSection = () => $("chapter-select").value;
 
-// A section was picked: fill the topic dropdown with that section's topics
-// (hidden when "All" is picked)
+// A chapter was picked: fill the topic dropdown with that chapter's topics
+// (hidden when "All chapters" is picked)
 function sectionChanged() {
   const section = selectedSection();
   const select = $("topic-select");
@@ -123,7 +114,6 @@ function sectionChanged() {
   $("topic-field").hidden = section === "all";
   if (section !== "all") {
     const sec = STUDY.find((s) => s.section === section);
-    $("topic-label").textContent = section;
     const count = QUESTIONS.filter((q) => q.section === section).length;
     select.append(new Option(`All topics (${count})`, "all"));
     for (const [topic, items] of Object.entries(sec.topics)) {
@@ -412,5 +402,5 @@ $("quiz-next").addEventListener("click", () => {
 });
 $("quiz-restart").addEventListener("click", () => restartQuiz(quiz.shuffleOnRestart));
 
-buildSectionButtons();
+buildChapterSelect();
 updateHome();
