@@ -226,8 +226,8 @@ const quiz = {
   mode: "easy", review: false, shuffleOnRestart: true,
 };
 
-// Losing a streak longer than this flashes "Streak lost" across the screen
-const BIG_STREAK = 5;
+// Losing a streak of this many or more flashes "Streak lost" across the screen
+const BIG_STREAK = 3;
 
 function startQuiz(review) {
   quiz.review = review;
@@ -527,7 +527,7 @@ function checkAnswer() {
     feedback.textContent = quiz.review ? "Correct! Removed from your missed list." : "Correct!";
     feedback.className = "feedback good";
   } else {
-    if (quiz.streak > BIG_STREAK) flashStreakLost();
+    if (quiz.streak >= BIG_STREAK) flashStreakLost();
     quiz.streak = 0;
     missed.add(q.text);
     feedback.textContent = "Not quite. The correct answer is highlighted in green." +
