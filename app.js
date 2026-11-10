@@ -247,15 +247,31 @@ function restartQuiz(reshuffle) {
   renderQuestion();
 }
 
-// Update the streak number; "pop" plays a little grow animation
-function showStreak(pop) {
-  const count = $("streak-count");
-  count.textContent = quiz.streak;
+// Best streak ever, saved in localStorage so it's kept between visits
+const BEST_KEY = "leb-best-streak";
+let bestStreak = 0;
+try { bestStreak = Number(localStorage.getItem(BEST_KEY)) || 0; } catch (e) {}
+
+// Show a number; "pop" plays a little grow animation
+function showCount(id, value, pop) {
+  const count = $(id);
+  count.textContent = value;
   count.classList.remove("pop");
   if (pop) {
     void count.offsetWidth; // lets the animation play again
     count.classList.add("pop");
   }
+}
+
+// Update the Streak number (popping when it goes up), and Best when it's beaten
+function showStreak(pop) {
+  showCount("streak-count", quiz.streak, pop);
+  const newBest = quiz.streak > bestStreak;
+  if (newBest) {
+    bestStreak = quiz.streak;
+    try { localStorage.setItem(BEST_KEY, bestStreak); } catch (e) {}
+  }
+  showCount("best-count", bestStreak, newBest);
 }
 
 // Flash a "Streak lost" page across the whole screen, picked at random:

@@ -195,11 +195,11 @@ select {
   border-top: 1px solid var(--border);
 }
 
-/* Streak counter above the quiz card */
+/* Streak and Best counters above the quiz card */
+.streaks { flex: none; display: flex; gap: 8px; margin: 0 0 12px; }
 .streak {
-  flex: none; align-self: flex-start;
   display: flex; align-items: center; gap: 10px;
-  margin: 0 0 12px; padding: 4px 16px;
+  margin: 0; padding: 4px 16px;
   background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
 }
 .streak span { color: var(--muted); }
