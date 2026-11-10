@@ -258,12 +258,167 @@ function showStreak(pop) {
   }
 }
 
-// Flash "Streak lost" across the whole screen for 1 second
+// Flash a "Streak lost" page across the whole screen, picked at random:
+// the LED sign with TRY HARDER, or WOMP WOMP.
+// ms: how long it stays up. start/stop: its animation.
+const STREAK_PAGES = [
+  { id: "try-harder", ms: 2600, start: (page) => startLedSigns(page), stop: () => stopLedSigns() },
+  { id: "womp-womp", ms: 2600, start: (page) => startWomp(page), stop: () => stopWomp() },
+];
+
 let streakLostTimer;
 function flashStreakLost() {
-  $("streak-lost").hidden = false;
   clearTimeout(streakLostTimer);
-  streakLostTimer = setTimeout(() => ($("streak-lost").hidden = true), 1000);
+  hideStreakLost();
+  const choice = STREAK_PAGES[Math.floor(Math.random() * STREAK_PAGES.length)];
+  const page = $(choice.id);
+  page.hidden = false;
+  if (choice.start) choice.start(page);
+  streakLostTimer = setTimeout(hideStreakLost, choice.ms);
+}
+
+function hideStreakLost() {
+  STREAK_PAGES.forEach((choice) => {
+    $(choice.id).hidden = true;
+    if (choice.stop) choice.stop();
+  });
+}
+
+// ---------- WOMP WOMP (flickering letters) ----------
+
+let wompTimer = null;
+const WOMP_DARK_SHARE = 1 / 6; // about 5 lit letters for every dark one
+
+function startWomp(page) {
+  stopWomp();
+  // Enough rows of WOMP to fill the screen (each row is about 0.86 x 26vw tall)
+  const rowHeight = innerWidth * 0.26 * 0.86;
+  const rows = Math.ceil(innerHeight / rowHeight) + 1;
+  page.replaceChildren();
+  for (let r = 0; r < rows; r++) {
+    const row = el("p", undefined, "womp-row");
+    for (const ch of "WOMP") row.append(el("span", ch));
+    page.append(row);
+  }
+  const letters = [...page.querySelectorAll("span")];
+  const darkCount = Math.round(letters.length * WOMP_DARK_SHARE);
+  shuffle(letters).slice(0, darkCount).forEach((l) => l.classList.add("off"));
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  // Every 70 ms some letters flicker; stutters go back on 35 ms later
+  wompTimer = setInterval(() => {
+    const stutters = wompTick(letters);
+    setTimeout(() => stutters.forEach((l) => l.classList.remove("off")), 35);
+  }, 70);
+}
+
+// One flicker: 1 or 2 dark letters light up while the same number of lit
+// letters go dark, so the 5-to-1 balance holds. Sometimes a lit letter also
+// stutters (goes dark for a moment, like a bad bulb). Returns the stuttering
+// letters, which the caller turns back on.
+function wompTick(letters) {
+  const dark = letters.filter((l) => l.classList.contains("off"));
+  const lit = letters.filter((l) => !l.classList.contains("off"));
+  const swaps = 1 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < swaps && dark.length && lit.length; i++) {
+    dark.splice(Math.floor(Math.random() * dark.length), 1)[0].classList.remove("off");
+    lit.splice(Math.floor(Math.random() * lit.length), 1)[0].classList.add("off");
+  }
+  const stutters = [];
+  if (Math.random() < 0.4 && lit.length) {
+    const letter = lit[Math.floor(Math.random() * lit.length)];
+    letter.classList.add("off");
+    stutters.push(letter);
+  }
+  return stutters;
+}
+
+function stopWomp() {
+  clearInterval(wompTimer);
+  wompTimer = null;
+}
+
+// ---------- LED sign (for the TRY HARDER page) ----------
+
+// Letters as 5 x 7 dots, like a real LED sign ("1" = lit)
+const LED_FONT = {
+  T: ["11111", "00100", "00100", "00100", "00100", "00100", "00100"],
+  R: ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
+  Y: ["10001", "10001", "01010", "00100", "00100", "00100", "00100"],
+  H: ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
+  A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+  D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
+  E: ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+};
+
+// The message as columns of dots, one letter after another, with a gap
+// before it repeats, so it runs as one continuous stream
+function ledColumns(text) {
+  const columns = [];
+  for (const ch of text) {
+    if (ch === " ") { columns.push(0, 0, 0); continue; }
+    const glyph = LED_FONT[ch];
+    for (let x = 0; x < 5; x++) {
+      let bits = 0;
+      for (let y = 0; y < 7; y++) if (glyph[y][x] === "1") bits |= 1 << y;
+      columns.push(bits);
+    }
+    columns.push(0); // space between letters
+  }
+  columns.push(0, 0, 0, 0); // space before it repeats
+  return columns;
+}
+
+const LED_TEXT = ledColumns("TRY HARDER");
+const LED_SPEED = 36; // columns per second
+let ledFrame = null;
+
+function startLedSigns(page) {
+  stopLedSigns();
+  const canvases = [...page.querySelectorAll("canvas.led")];
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const start = performance.now();
+  const draw = (now) => {
+    // The lit dots move one column at a time, like a real LED sign
+    const shift = still ? 0 : Math.floor(((now - start) / 1000) * LED_SPEED);
+    canvases.forEach((canvas, i) => drawLed(canvas, shift + i * 9));
+    ledFrame = still ? null : requestAnimationFrame(draw);
+  };
+  ledFrame = requestAnimationFrame(draw);
+}
+
+function stopLedSigns() {
+  if (ledFrame) cancelAnimationFrame(ledFrame);
+  ledFrame = null;
+}
+
+function drawLed(canvas, shift) {
+  const ratio = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w * ratio)) {
+    canvas.width = Math.round(w * ratio);
+    canvas.height = Math.round(h * ratio);
+  }
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const rows = 9; // 7 rows of letter plus a blank row above and below
+  const pitch = h / rows;
+  const radius = pitch * 0.38;
+  const cols = Math.ceil(w / pitch) + 1;
+  for (let c = 0; c < cols; c++) {
+    const bits = LED_TEXT[(shift + c) % LED_TEXT.length];
+    for (let r = 0; r < rows; r++) {
+      // Only the lit dots are drawn (no faint grid behind them)
+      const lit = r > 0 && r < 8 && (bits >> (r - 1)) & 1;
+      if (!lit) continue;
+      ctx.beginPath();
+      ctx.arc(c * pitch + pitch / 2, r * pitch + pitch / 2, radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#FF2424";
+      ctx.shadowColor = "rgba(255, 36, 36, 0.8)";
+      ctx.shadowBlur = radius * 1.6;
+      ctx.fill();
+    }
+  }
 }
 
 function renderQuestion() {

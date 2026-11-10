@@ -7,10 +7,10 @@
   <!-- Fonts from Google Fonts (if they can't load, similar built-in fonts are used) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Oswald:wght@500&family=Source+Serif+4:wght@400;600&display=swap">
-  <!-- "?v=3": raise this number (here and on app.js below) whenever you change
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@900&family=Oswald:wght@500&family=Source+Serif+4:wght@400;600&display=swap">
+  <!-- "?v=7": raise this number (here and on app.js below) whenever you change
        style.css or app.js, so browsers load the new file instead of an old saved copy -->
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <!-- Title, shown on the home screen -->
@@ -100,7 +100,14 @@
   </main>
 
   <!-- Flashes over the whole screen when you lose a long streak -->
-  <div id="streak-lost" class="streak-lost" role="alert" hidden>Streak lost</div>
+  <!-- One version: an LED sign, with "TRY HARDER" running above and below -->
+  <div id="try-harder" class="try-harder" role="alert" hidden>
+    <canvas class="led" aria-hidden="true"></canvas>
+    <p class="try-harder-title">Streak lost</p>
+    <canvas class="led" aria-hidden="true"></canvas>
+  </div>
+  <!-- Another version: WOMP WOMP filling the screen, letters flickering -->
+  <div id="womp-womp" class="womp-womp" role="alert" aria-label="Womp womp" hidden></div>
 
   <!-- Study material. Each data file adds one chapter to this list.
        To add material: put a new file in data/ and add a line for it here. -->
@@ -110,7 +117,7 @@
   <script src="data/chapter-13.js"></script>
 
   <!-- The app itself (must come after the data files) -->
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=9"></script>
   <script src="easter-eggs.js?v=8"></script>
 </body>
 </html>
