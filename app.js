@@ -436,10 +436,12 @@ function renderQuestion() {
   $("quiz-hint").textContent = q.kind === "multi" && !saysHowMany ? `Choose ${q.correct.length}.` : "";
   $("quiz-hint").hidden = !$("quiz-hint").textContent;
 
-  // One radio button per choice (checkboxes for "select all that apply")
+  // One radio button per choice (checkboxes for "select all that apply"),
+  // each with its keyboard letter: A B C D, or T F for true/false
   const box = $("quiz-options");
   box.replaceChildren();
-  q.options.forEach((option) => {
+  const letters = q.kind === "tf" ? "TF" : "ABCD";
+  q.options.forEach((option, i) => {
     const input = document.createElement("input");
     input.type = q.kind === "multi" ? "checkbox" : "radio";
     input.name = "choice";
@@ -448,7 +450,7 @@ function renderQuestion() {
       $("quiz-submit").disabled = !box.querySelector("input:checked");
     });
     const label = el("label");
-    label.append(input, el("span", option));
+    label.append(input, el("span", letters[i], "letter"), el("span", option));
     box.append(label);
   });
 
@@ -535,14 +537,8 @@ $("clear-missed").addEventListener("click", () => {
   }
 });
 
-// The card flips on tap/click, or with Enter or Space on a keyboard
+// The card flips on tap/click (and Enter or Space, in the shortcuts below)
 $("card").addEventListener("click", flipCard);
-$("card").addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    flipCard();
-  }
-});
 $("flash-prev").addEventListener("click", () => showCard(flash.index - 1));
 $("flash-next").addEventListener("click", () => showCard(flash.index + 1));
 $("flash-shuffle").addEventListener("click", () => {
@@ -556,6 +552,71 @@ $("quiz-next").addEventListener("click", () => {
   renderQuestion();
 });
 $("quiz-restart").addEventListener("click", () => restartQuiz(quiz.shuffleOnRestart));
+
+// ---------- 8. Keyboard shortcuts ----------
+//   Home:       F flashcards, Q quiz, M review missed (then F or Q),
+//               E easy, H hard
+//   Flashcards: Space or Enter flip, ← → previous / next, S shuffle
+//   Quiz:       A B C D choose (T or F for true/false),
+//               Enter check answer, then next / restart
+//   Anywhere:   Esc back to Home
+// (G is taken: it's the gravity easter egg.)
+
+// Press a button the way a tap would, if it's showing and not greyed out
+function press(id) {
+  const button = $(id);
+  if (button.disabled || button.closest("[hidden]")) return false;
+  button.click();
+  return true;
+}
+
+const showing = (view) => !$(view + "-view").hidden;
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return; // leave browser shortcuts alone
+  if (e.target.tagName === "SELECT") return;      // typing in a dropdown picks from it
+  const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  // Enter or Space on a focused button already presses that button
+  if ((key === "Enter" || key === " ") && e.target.tagName === "BUTTON") return;
+  if (key === "Enter" && e.repeat) return; // holding Enter shouldn't race ahead
+
+  let handled = true;
+  if (key === "Escape") {
+    if (showing("home")) showMissedChoice(false);
+    else goHome();
+  } else if (showing("home")) {
+    const missedOpen = !$("missed-choice").hidden;
+    if (key === "f") handled = press(missedOpen ? "missed-flash" : "start-flash");
+    else if (key === "q") handled = press(missedOpen ? "missed-quiz" : "start-quiz");
+    else if (key === "m") handled = press("start-missed");
+    else if (key === "e" || key === "h") {
+      document.querySelector(`input[name="mode"][value="${key === "e" ? "easy" : "hard"}"]`).click();
+    } else handled = false;
+  } else if (showing("flash")) {
+    if (key === " " || key === "Enter") flipCard();
+    else if (key === "ArrowLeft") handled = press("flash-prev");
+    else if (key === "ArrowRight") handled = press("flash-next");
+    else if (key === "s") handled = press("flash-shuffle");
+    else handled = false;
+  } else if (showing("quiz")) {
+    if (key === "Enter") {
+      handled = press("quiz-submit") || press("quiz-next") || press("quiz-restart");
+    } else {
+      // A-D pick a choice (a checkbox toggles); T and F also work for true/false
+      const inputs = [...$("quiz-options").querySelectorAll("input")];
+      let index = "abcd".indexOf(key);
+      if (inputs.length === 2 && inputs[0].value === "True") {
+        if (key === "t") index = 0;
+        if (key === "f") index = 1;
+      }
+      const input = inputs[index];
+      if (key.length === 1 && input && !input.disabled) input.click();
+      else handled = false;
+    }
+  } else handled = false;
+
+  if (handled) e.preventDefault(); // e.g. stop Space from scrolling
+});
 
 buildChapterSelect();
 updateHome();

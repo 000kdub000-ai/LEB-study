@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@900&family=Oswald:wght@500&family=Source+Serif+4:wght@400;600&display=swap">
-  <!-- "?v=7": raise this number (here and on app.js below) whenever you change
+  <!-- "?v=8": raise this number (here and on app.js below) whenever you change
        style.css or app.js, so browsers load the new file instead of an old saved copy -->
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <!-- Title, shown on the home screen -->
@@ -54,6 +54,8 @@
       </div>
       <p id="home-note"></p>
       <button id="clear-missed" class="link">Clear missed list</button>
+      <!-- Keyboard shortcuts (shown on computers only) -->
+      <p class="keys"><kbd>F</kbd> flashcards · <kbd>Q</kbd> quiz · <kbd>M</kbd> missed · <kbd>E</kbd> / <kbd>H</kbd> easy or hard</p>
     </section>
 
     <!-- FLASHCARDS: tap the card to flip it -->
@@ -72,6 +74,7 @@
         <button id="flash-shuffle" class="secondary">Shuffle</button>
         <button id="flash-next">Next</button>
       </div>
+      <p class="keys"><kbd>Space</kbd> flip · <kbd>&larr;</kbd> <kbd>&rarr;</kbd> prev / next · <kbd>S</kbd> shuffle · <kbd>Esc</kbd> home</p>
     </section>
 
     <!-- QUIZ: answer, get feedback, move on -->
@@ -96,6 +99,7 @@
         <button id="quiz-next" hidden>Next</button>
         <button id="quiz-restart" hidden>Restart</button>
       </div>
+      <p class="keys"><kbd>A</kbd>–<kbd>D</kbd> choose · <kbd>Enter</kbd> check / next · <kbd>Esc</kbd> home</p>
     </section>
   </main>
 
@@ -118,7 +122,7 @@
   <script src="data/chapter-14.js"></script>
 
   <!-- The app itself (must come after the data files) -->
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
   <script src="easter-eggs.js?v=8"></script>
 </body>
 </html>

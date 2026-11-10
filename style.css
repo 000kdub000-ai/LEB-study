@@ -261,6 +261,19 @@ select {
   line-height: 1.45; cursor: pointer;
 }
 .options input { margin-top: 4px; flex: none; accent-color: var(--primary-bg); }
+.options .letter { flex: none; font-family: var(--font-label); font-weight: 500; color: var(--muted); }
+.options label.correct .letter, .options label.wrong .letter { color: inherit; }
+
+/* Keyboard shortcut hints: only shown on computers (mouse or trackpad),
+   since phones have no keyboard */
+.keys { display: none; flex: none; margin: 10px 0 0; font-size: 13px; color: var(--muted); text-align: center; }
+.keys kbd {
+  font-family: var(--font-label); font-size: 12px;
+  border: 1px solid var(--border); border-radius: 4px; padding: 0 5px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .keys { display: block; }
+}
 .options label.correct { background: var(--good); border-color: var(--good); color: var(--paper); }
 .options label.wrong { background: var(--bad); border-color: var(--bad); color: var(--paper); }
 
