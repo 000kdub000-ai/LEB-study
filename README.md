@@ -14,7 +14,7 @@ your missed list is saved in your own browser (localStorage).
 | `index.html` | The page layout, plus the list of data files to load |
 | `style.css` | How it looks (colors at the top, light and dark mode) |
 | `app.js` | How it works: flashcards, quiz and the missed list |
-| `data/chapter-11.js`, `data/chapter-12.js`, `data/chapter-13.js` | The study questions, one file per chapter |
+| `data/chapter-11.js` to `data/chapter-14.js` | The study questions, one file per chapter |
 | `sounds.js` | The "streak lost" messages and which sound goes with each |
 | `sounds/` | The sound recordings (credits at the bottom of this README) |
 | `sound-test.html` | A test page: tap a button to hear each sound and see its message |
@@ -136,14 +136,14 @@ Questions without an answer still appear as flashcards, but quizzes skip them.
 
 ### Add a new chapter by hand
 
-1. Copy `data/chapter-11.js` to a new file, such as `data/chapter-14.js`.
-2. Change the `section` name (for example `"Chapter 14: Capacity"`) and replace the topics and questions. The
+1. Copy `data/chapter-11.js` to a new file, such as `data/chapter-15.js`.
+2. Change the `section` name (for example `"Chapter 15: Mistakes"`) and replace the topics and questions. The
    comment at the top of each data file shows the format for every question
    type.
 3. In `index.html`, add a line for the new file next to the others:
 
    ```html
-   <script src="data/chapter-14.js"></script>
+   <script src="data/chapter-15.js"></script>
    ```
 
 ### Add a new chapter from a Word doc
