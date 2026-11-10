@@ -15,9 +15,6 @@ your missed list is saved in your own browser (localStorage).
 | `style.css` | How it looks (colors at the top, light and dark mode) |
 | `app.js` | How it works: flashcards, quiz and the missed list |
 | `data/chapter-11.js` to `data/chapter-14.js` | The study questions, one file per chapter |
-| `sounds.js` | The "streak lost" messages and which sound goes with each |
-| `sounds/` | The sound recordings (credits at the bottom of this README) |
-| `sound-test.html` | A test page: tap a button to hear each sound and see its message |
 | `tools/convert_docx.py` | Optional helper that turns a study Word doc into data files |
 
 ## 1. Open the app on your computer
@@ -168,17 +165,3 @@ are now Chapters 11 and 12, so don't re-run it on that doc.)
 
 A tip if you edit questions: the missed list remembers questions by their
 text. If you change a question's wording, it drops off the missed list.
-
-## Sound credits
-
-The "streak lost" sounds are trimmed recordings from Wikimedia Commons.
-
-| Sound | Original file | By | License |
-|---|---|---|---|
-| `sounds/streak-lost.m4a` | [Fim efeito sonoro retrô.oga](https://commons.wikimedia.org/wiki/File:Fim_efeito_sonoro_retr%C3%B4.oga) | Rafaeljuliani | CC0 |
-| `sounds/nope.m4a` | [Buzzer.wav](https://commons.wikimedia.org/wiki/File:Buzzer.wav) | David Pride | CC0 |
-| `sounds/cmon-really.m4a` | [Three sighs.ogg](https://commons.wikimedia.org/wiki/File:Three_sighs.ogg) (the third sigh) | ezwa | Public domain |
-| `sounds/lock-in.m4a` | [Field cricket Gryllus pennsylvanicus.ogg](https://commons.wikimedia.org/wiki/File:Field_cricket_Gryllus_pennsylvanicus.ogg) | Thatcher | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) (trimmed and volume-adjusted; this trimmed copy is shared under the same license) |
-| `sounds/cs-get-degrees.m4a` | [Luftrüssel.ogg](https://commons.wikimedia.org/wiki/File:Luftr%C3%BCssel.ogg) | Flo Sorg | Public domain |
-| `sounds/effort.m4a` | [619016 mrrap4food clapping-then-leaving.mp3](https://commons.wikimedia.org/wiki/File:619016_mrrap4food_clapping-then-leaving.mp3) | mrrap4food | CC0 |
-| `sounds/womp-womp.m4a` | [Sad Trombone-Joe Lamb-665429450.ogg](https://commons.wikimedia.org/wiki/File:Sad_Trombone-Joe_Lamb-665429450.ogg) | Joe Lamb | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) (trimmed and volume-adjusted) |
