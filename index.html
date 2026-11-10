@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@900&family=Oswald:wght@500&family=Source+Serif+4:wght@400;600&display=swap">
-  <!-- "?v=9": raise this number (here and on app.js below) whenever you change
+  <!-- "?v=10": raise this number (here and on app.js below) whenever you change
        style.css or app.js, so browsers load the new file instead of an old saved copy -->
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
   <!-- Title, shown on the home screen -->
@@ -115,6 +115,11 @@
   </div>
   <!-- Another version: WOMP WOMP filling the screen, letters flickering -->
   <div id="womp-womp" class="womp-womp" role="alert" aria-label="Womp womp" hidden></div>
+  <!-- Another version: the GUTTER BALL bowling video, with sound.
+       Tap it or press any key to skip. -->
+  <div id="gutter-ball" class="gutter-ball" role="alert" aria-label="Gutter ball" hidden>
+    <video src="videos/gutter-ball.mp4" preload="auto" playsinline></video>
+  </div>
 
   <!-- Study material. Each data file adds one chapter to this list.
        To add material: put a new file in data/ and add a line for it here. -->
@@ -125,7 +130,7 @@
   <script src="data/chapter-14.js"></script>
 
   <!-- The app itself (must come after the data files) -->
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
   <script src="easter-eggs.js?v=8"></script>
 </body>
 </html>

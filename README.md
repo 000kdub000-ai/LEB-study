@@ -16,6 +16,7 @@ your missed list is saved in your own browser (localStorage).
 | `app.js` | How it works: flashcards, quiz and the missed list |
 | `data/chapter-11.js` to `data/chapter-14.js` | The study questions, one file per chapter |
 | `tools/convert_docx.py` | Optional helper that turns a study Word doc into data files |
+| `videos/gutter-ball.mp4` | The GUTTER BALL video, one of the "streak lost" pages |
 
 ## 1. Open the app on your computer
 

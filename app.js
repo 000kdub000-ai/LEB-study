@@ -275,11 +275,12 @@ function showStreak(pop) {
 }
 
 // Flash a "Streak lost" page across the whole screen, picked at random:
-// the LED sign with TRY HARDER, or WOMP WOMP.
+// the LED sign with TRY HARDER, WOMP WOMP, or the GUTTER BALL video.
 // ms: how long it stays up. start/stop: its animation.
 const STREAK_PAGES = [
   { id: "try-harder", ms: 2600, start: (page) => startLedSigns(page), stop: () => stopLedSigns() },
   { id: "womp-womp", ms: 2600, start: (page) => startWomp(page), stop: () => stopWomp() },
+  { id: "gutter-ball", ms: 13000, start: (page) => startVideo(page), stop: () => stopVideo() },
 ];
 
 let streakLostTimer;
@@ -294,11 +295,35 @@ function flashStreakLost() {
 }
 
 function hideStreakLost() {
+  clearTimeout(streakLostTimer);
   STREAK_PAGES.forEach((choice) => {
     $(choice.id).hidden = true;
     if (choice.stop) choice.stop();
   });
 }
+
+// ---------- GUTTER BALL (video) ----------
+
+const gutterVideo = $("gutter-ball").querySelector("video");
+
+// Play from the start, with sound. If the browser won't allow sound,
+// play it muted instead.
+function startVideo() {
+  gutterVideo.currentTime = 0;
+  gutterVideo.muted = false;
+  gutterVideo.play().catch(() => {
+    gutterVideo.muted = true;
+    gutterVideo.play().catch(() => {});
+  });
+}
+
+function stopVideo() {
+  gutterVideo.pause();
+}
+
+// It goes away when it ends, or when tapped
+gutterVideo.addEventListener("ended", hideStreakLost);
+$("gutter-ball").addEventListener("click", hideStreakLost);
 
 // ---------- WOMP WOMP (flickering letters) ----------
 
@@ -590,6 +615,12 @@ const showing = (view) => !$(view + "-view").hidden;
 
 document.addEventListener("keydown", (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return; // leave browser shortcuts alone
+  // While the GUTTER BALL video plays, any key just skips it
+  if (!$("gutter-ball").hidden) {
+    hideStreakLost();
+    e.preventDefault();
+    return;
+  }
   if (e.target.tagName === "SELECT") return;      // typing in a dropdown picks from it
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   // Enter or Space on a focused button already presses that button
